@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life OS — Design Evolution Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', -apple-system, sans-serif; background: #fafafa; color: #333; line-height: 1.6; }
+
+  /* Header */
+  .report-header { background: linear-gradient(180deg, #87CEEB 0%, #D4EDF7 40%, #fff 100%); padding: 60px 40px 40px; }
+  .report-header h1 { font-family: 'Inter'; font-size: 2.4rem; font-weight: 700; color: #000; letter-spacing: -0.02em; }
+  .report-header .subtitle { font-size: 1rem; color: #6B7280; margin-top: 8px; }
+  .report-header .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; font-size: 0.78rem; color: #6B7280; }
+  .report-header .meta span { display: flex; align-items: center; gap: 6px; }
+  .meta-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Layout */
+  .container { max-width: 900px; margin: 0 auto; padding: 0 40px 60px; }
+
+  /* TOC */
+  .toc { background: #fff; border-radius: 12px; padding: 28px; margin: 32px 0; border: 1px solid #e6e6e6; }
+  .toc h2 { font-family: 'Inter'; font-size: 0.8rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+  .toc-item { display: flex; align-items: baseline; gap: 12px; padding: 6px 0; font-size: 0.85rem; text-decoration: none; color: #333; border-bottom: 1px solid #f2f2f2; }
+  .toc-item:last-child { border: none; }
+  .toc-item:hover { color: #60A5FA; }
+  .toc-ver { font-family: 'Inter'; font-weight: 600; color: #60A5FA; min-width: 50px; }
+  .toc-date { font-family: 'Inter'; font-size: 0.72rem; color: #9CA3AF; min-width: 80px; }
+  .toc-title { flex: 1; }
+
+  /* Version Block */
+  .version { background: #fff; border-radius: 14px; padding: 32px; margin-bottom: 28px; border: 1px solid #e6e6e6; position: relative; }
+  .version::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+  .v-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .v-label { font-family: 'Inter'; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+  .v-title { font-family: 'Inter'; font-size: 1.3rem; font-weight: 700; color: #000; margin-top: 4px; }
+  .v-date { font-family: 'Inter'; font-size: 0.72rem; color: #9CA3AF; background: #f8f8f8; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+  .v-commit { font-family: 'Inter'; font-size: 0.68rem; color: #9CA3AF; margin-top: 2px; }
+  .v-desc { font-size: 0.88rem; color: #6B7280; margin-bottom: 20px; line-height: 1.65; }
+
+  /* Detail table */
+  .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.82rem; }
+  .detail-table th { font-family: 'Inter'; text-align: left; padding: 8px 12px; background: #f8f8f8; color: #6B7280; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e6e6e6; }
+  .detail-table td { padding: 8px 12px; border-bottom: 1px solid #f2f2f2; vertical-align: top; }
+  .detail-table tr:last-child td { border: none; }
+  .cat { font-family: 'Inter'; font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .cat-add { background: rgba(96,165,250,0.1); color: #60A5FA; }
+  .cat-change { background: rgba(251,191,36,0.1); color: #D97706; }
+  .cat-remove { background: rgba(220,38,38,0.1); color: #DC2626; }
+  .cat-fix { background: rgba(16,185,129,0.1); color: #059669; }
+  .cat-tech { background: #f2f2f2; color: #808080; }
+
+  /* Design decision */
+  .decision { background: #f8f8fa; border-left: 3px solid #60A5FA; padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 0.82rem; color: #333; line-height: 1.6; }
+  .decision strong { color: #000; }
+
+  /* Links */
+  .v-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .v-link { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 0.75rem; font-weight: 500; color: #60A5FA; border: 1px solid #60A5FA; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
+  .v-link:hover { background: rgba(96,165,250,0.08); }
+  .v-link.primary { background: rgba(96,165,250,0.1); font-weight: 600; }
+  .v-link-icon { width: 14px; height: 14px; }
+
+  /* Timeline connector */
+  .connector { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
+  .connector-line { width: 2px; height: 20px; background: #e6e6e6; }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+  .summary-card { background: #fff; border: 1px solid #e6e6e6; border-radius: 10px; padding: 20px; text-align: center; }
+  .summary-num { font-family: 'Inter'; font-size: 2rem; font-weight: 700; color: #60A5FA; }
+  .summary-label { font-size: 0.75rem; color: #6B7280; margin-top: 4px; }
+
+  /* Color swatch */
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,0.08); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .report-header { padding: 40px 20px 30px; }
+    .report-header h1 { font-size: 1.6rem; }
+    .container { padding: 0 16px 40px; }
+    .version { padding: 20px; }
+    .detail-table { font-size: 0.75rem; }
+  }
+
+  /* Version colors */
+  .v01::before { background: #94A3B8; }
+  .v02::before { background: #94A3B8; }
+  .v03::before { background: #60A5FA; }
+  .v04::before { background: #60A5FA; }
+  .v05::before { background: #8B5CF6; }
+  .v06::before { background: #8B5CF6; }
+  .v07::before { background: #059669; }
+  .v08::before { background: #F59E0B; }
+
+  /* Print */
+  @media print {
+    body { background: #fff; }
+    .version { break-inside: avoid; border: 1px solid #ddd; }
+    .v-link { color: #333; border-color: #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<div class="report-header">
+  <div style="max-width:900px;margin:0 auto;">
+    <h1>Life OS Design Evolution Report</h1>
+    <div class="subtitle">개인 생활 관리 앱의 디자인 진화 과정 — 8단계, 6일간의 기록</div>
+    <div class="meta">
+      <span><span class="meta-dot" style="background:#60A5FA;"></span> 프로젝트: Life OS (진's LifeOS)</span>
+      <span><span class="meta-dot" style="background:#059669;"></span> 기간: 2026-05-02 ~ 05-07</span>
+      <span><span class="meta-dot" style="background:#8B5CF6;"></span> 현재 버전: v0.8.0 (Stage 8)</span>
+      <span><span class="meta-dot" style="background:#F59E0B;"></span> 커밋: 40+ / 파일: 26개 변경</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="summary-num">8</div>
+    <div class="summary-label">디자인 스테이지</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num">6</div>
+    <div class="summary-label">작업일</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num">16</div>
+    <div class="summary-label">HTML 시안 / 프로토타입</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num">12</div>
+    <div class="summary-label">DB 테이블</div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h2>Version History</h2>
+  <a class="toc-item" href="#v01"><span class="toc-ver">v0.1</span><span class="toc-date">05-02 AM</span><span class="toc-title">Stage 1 — 초기 무드보드 (다크 배경 + 멀티 컬러)</span></a>
+  <a class="toc-item" href="#v02"><span class="toc-ver">v0.2</span><span class="toc-date">05-02 AM</span><span class="toc-title">Stage 2 — 디자인 전환 (흰 배경 + 단일 컬러)</span></a>
+  <a class="toc-item" href="#v03"><span class="toc-ver">v0.3</span><span class="toc-date">05-02 PM</span><span class="toc-title">Stage 3 — 인터랙티브 프로토타입 (날씨 헤더 + 브리핑)</span></a>
+  <a class="toc-item" href="#v04"><span class="toc-ver">v0.4</span><span class="toc-date">05-02 PM</span><span class="toc-title">Stage 4 — design1 (Next.js 앱 + DB + AI)</span></a>
+  <a class="toc-item" href="#v05"><span class="toc-ver">v0.5</span><span class="toc-date">05-03 AM</span><span class="toc-title">Stage 5 — 기록 탭 + 네비게이션 기획</span></a>
+  <a class="toc-item" href="#v06"><span class="toc-ver">v0.6</span><span class="toc-date">05-03 PM</span><span class="toc-title">Stage 6 — design2 (하루 캐릭터 + 대시보드)</span></a>
+  <a class="toc-item" href="#v07"><span class="toc-ver">v0.7</span><span class="toc-date">05-03~04</span><span class="toc-title">Stage 7 — 루틴 + 리포트/회고 + MI 공감 대화</span></a>
+  <a class="toc-item" href="#v08"><span class="toc-ver">v0.8</span><span class="toc-date">05-07</span><span class="toc-title">Stage 8 — UX Audit 기반 전면 개선</span></a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- v0.1 -->
+<div class="version v01" id="v01">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#94A3B8;">v0.1 — Stage 1</div>
+      <div class="v-title">초기 무드보드</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-02 오전</div>
+      <div class="v-commit">e0a1c15 → 4e18e75</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    3가지 컬러 팔레트, 4가지 폰트 조합, 캐릭터별 액센트 컬러를 비교하는 초기 무드보드.
+    다크 배경(#0f0f0f)에 멀티 컬러를 사용하는 감성적 UI 방향.
+  </div>
+  <table class="detail-table">
+    <tr><th>구분</th><th>내용</th></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>배경</strong>: 다크 (#0f0f0f)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>팔레트 A</strong>: Teal Productivity (<span class="swatch" style="background:#0D9488;"></span>#0D9488 + <span class="swatch" style="background:#EA580C;"></span>#EA580C)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>팔레트 B</strong>: Mono + Blue (<span class="swatch" style="background:#18181B;"></span>#18181B + <span class="swatch" style="background:#2563EB;"></span>#2563EB)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>팔레트 C</strong>: Calm Lavender (<span class="swatch" style="background:#8B5CF6;"></span>#8B5CF6 + <span class="swatch" style="background:#059669;"></span>#059669)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>캐릭터</strong>: 진(Slate) / 모미(Emerald) / 마음(Violet)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>폰트 후보</strong>: Outfit / Plus Jakarta Sans / Sora / DM Sans + Noto Sans KR</td></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>DB 스키마 설계, 아키텍처 구조 기획</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link primary" href="process/design_history/stage1-2-moodboard.html" target="_blank">무드보드 열기</a>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.2 -->
+<div class="version v02" id="v02">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#94A3B8;">v0.2 — Stage 2</div>
+      <div class="v-title">디자인 전환: 흰 배경 + 단일 컬러</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-02 오전</div>
+      <div class="v-commit">피드백 기반 전면 수정</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    "배경 흰색, 색 최소화, 형태 최소화, 시간에 따른 컬러 하나만" — 사용자 피드백으로 디자인 방향 전면 전환.
+  </div>
+
+  <div class="decision">
+    <strong>디자인 결정:</strong> 다크 배경의 감성은 좋았으나, 실용적 관점에서 흰 배경 + 텍스트 중심이 매일 사용하는 앱에 적합하다고 판단. 유일한 색 하나가 시간에 따라 변하는 컨셉으로 "살아있는 느낌"을 유지.
+  </div>
+
+  <table class="detail-table">
+    <tr><th>구분</th><th>Before</th><th>After</th></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td>다크 배경 (#0f0f0f)</td><td>순백 배경 (<span class="swatch" style="background:#fff;border:1px solid #ddd;"></span>#FFFFFF)</td></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td>멀티 컬러 (3 팔레트)</td><td>단일 컬러 (시간 기반)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>텍스트 계층: #000(강조) / #333(본문) / #808080(보조) / #B3B3B3(라벨)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>시간 컬러 3옵션: Blue Cycle / Warm Shift / Ink</td></tr>
+    <tr><td><span class="cat cat-remove">제거</span></td><td>카드/테두리/그림자</td><td>여백과 구분선만</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link" href="process/design_history/stage1-2-moodboard.html" target="_blank">무드보드 v2</a>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.3 -->
+<div class="version v03" id="v03">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#60A5FA;">v0.3 — Stage 3</div>
+      <div class="v-title">인터랙티브 프로토타입</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-02 오후</div>
+      <div class="v-commit">4e18e75</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    디자인 시스템을 실제 인터랙티브 HTML 프로토타입으로 구현. 시간대/컬러 실시간 전환 가능.
+  </div>
+  <table class="detail-table">
+    <tr><th>구분</th><th>내용</th></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>날씨 헤더</strong>: 하늘 그라디언트 12종 (morning/afternoon/evening/night × 3 컬러)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>기온</strong>: 5.4rem 대형 폰트 + 맑음/최저/최고</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>인사말</strong>: Good Morning/Afternoon/Evening/Night 자동 전환</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>3블록 브리핑</strong>: Yesterday(취소선) / Today / Recommendation(액센트 선)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>캐릭터 탭</strong>: 진(Butler) / 모미(Trainer) / 마음(Coach)</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link primary" href="process/design_history/stage3-briefing-prototype.html" target="_blank">브리핑 프로토타입</a>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.4 -->
+<div class="version v04" id="v04">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#60A5FA;">v0.4 — Stage 4</div>
+      <div class="v-title">design1: 실제 앱 구현</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-02 저녁</div>
+      <div class="v-commit">c6b7055 → f5f9295</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    프로토타입을 Next.js 16 앱으로 구현. Supabase DB, ChatGPT AI 대화, Todo, Google Calendar 연동까지 하루 만에 완성.
+  </div>
+  <table class="detail-table">
+    <tr><th>구분</th><th>내용</th></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>Next.js 16 (App Router) + TypeScript + Tailwind CSS v4</td></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>Supabase (PostgreSQL + Auth + Realtime) — 6개 테이블</td></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>ChatGPT API (gpt-4o-mini) — Claude에서 전환</td></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>Vercel 자동 배포</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>하단 3탭</strong>: 진 / 모미 / 마음</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>모미 탭</strong>: Health Status 입력 (수면/컨디션/운동) + AI 대화</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>마음 탭</strong>: 감정 선택 + AI 대화</td></tr>
+    <tr><td><span class="cat cat-fix">수정</span></td><td>iOS Safari 자동 확대 방지 (input font-size 16px)</td></tr>
+    <tr><td><span class="cat cat-fix">수정</span></td><td>날씨 텍스트 항상 검은색 (다크 하늘에서 가독성)</td></tr>
+  </table>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.5 -->
+<div class="version v05" id="v05">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#8B5CF6;">v0.5 — Stage 5</div>
+      <div class="v-title">기록 탭 + 네비게이션 기획</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-03 오전</div>
+      <div class="v-commit">01ec945 → c4fdb5f</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    날짜별 다이어리 화면 기획, 3가지 네비게이션 옵션 시안 비교, 모미+마음 합동 대화방 구상.
+  </div>
+
+  <div class="decision">
+    <strong>디자인 결정:</strong> 5탭(각 캐릭터 독립)은 너무 복잡. 3탭은 기록이 빠짐. 최종 4탭(홈/친구들/기록/설정)으로 결정. 모미+마음은 "친구들" 한 대화방에서 키워드로 자동 분기.
+  </div>
+
+  <table class="detail-table">
+    <tr><th>구분</th><th>내용</th></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>Diary 시안</strong>: 날짜 스크롤 피커(scroll-snap) + Health/Emotion/Schedule 표시</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>Nav A</strong>: 3탭 (홈/기록/설정) — 홈 안에 캐릭터</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>Nav B</strong>: 5탭 (홈/모미/마음/기록/설정) — 각 캐릭터 독립</td></tr>
+    <tr><td><span class="cat cat-change">결정</span></td><td><strong>최종 선택</strong>: 4탭 (홈/친구들/기록/설정)</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link primary" href="process/design_history/stage5-diary-prototype.html" target="_blank">Diary 시안</a>
+    <a class="v-link" href="process/design_history/stage5-nav-comparison.html" target="_blank">Nav A vs B</a>
+    <a class="v-link" href="process/design_history/stage5-friends-prototype.html" target="_blank">친구들 시안</a>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.6 -->
+<div class="version v06" id="v06">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#8B5CF6;">v0.6 — Stage 6</div>
+      <div class="v-title">design2: 하루 캐릭터 + 대시보드</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-03 오후</div>
+      <div class="v-commit">01ec945 → 7315b16</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    모미+마음 → "하루" 통합 비서로 전환. 기록 탭에 Today/Week/Month 서브 탭 추가. 데이터 시각화 대시보드 완성.
+  </div>
+
+  <div class="decision">
+    <strong>디자인 결정:</strong> 모미(건강)와 마음(감정)을 분리하면 사용자가 어디에 말해야 할지 모름. "하루"라는 만능 비서 하나로 통합하면 모든 주제를 자연스럽게 대화 가능. 이름 "하루"는 매일의 하루를 리뷰해주는 의미.
+  </div>
+
+  <table class="detail-table">
+    <tr><th>구분</th><th>Before</th><th>After</th></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td>친구들(모미+마음) 대화방</td><td>"하루" 통합 비서</td></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td>4탭: 홈/친구들/기록/설정</td><td>4탭: 홈/하루/기록/설정</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>기록 Week: 달성률 카드 + 수면 바 차트 + 감정 흐름</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>기록 Month: 히트맵 캘린더 + 30일 차트 + 감정 분포</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>Daily Insight: DB 실시간 조합 (30분 갱신)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>Recommendation: 대화 기반 팁 추출 + 체크</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>Daily Review 4질문: 감사/완료/내일/나에게</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td>—</td><td>컬러 룰: <span class="swatch" style="background:#60A5FA;"></span>블루 = 달성 · <span class="swatch" style="background:#E6E6E6;"></span>그레이 = 미달</td></tr>
+  </table>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.7 -->
+<div class="version v07" id="v07">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#059669;">v0.7 — Stage 7</div>
+      <div class="v-title">루틴 + 리포트/회고 + MI 공감 대화</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-03 ~ 05-05</div>
+      <div class="v-commit">7315b16 → 3c180f9</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    습관 추적, 자동 리포트, 회고 시스템, 하루 대화 스타일 전면 개편. "기록하고 돌아보고 개선하는" 완전한 생산성 사이클 완성.
+  </div>
+
+  <div class="decision">
+    <strong>디자인 결정:</strong> AI가 바로 리스트를 주면 딱딱한 느낌. 동기면담(MI) 4원칙 적용: 경청/반영 → 열린 질문 → 공감 먼저 → 자율성 존중. "정리해드릴까요?" 물어보고 동의 후 제공.
+  </div>
+
+  <table class="detail-table">
+    <tr><th>구분</th><th>내용</th></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>루틴 시스템</strong>: 체크 토글 + 연속 일수 + 🔥(3일+) + "잊지 않으셨죠?"</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>주간 리포트</strong>: "이번 주는 7일 중 5일을 기록하셨어요..." (자동 생성)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>월간 리포트</strong>: 건강/감정/루틴/활동 4섹션 종합 (자동 생성)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>주간 회고</strong>: 다음 주 다짐 + 한줄 소감 (직접 입력)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>월간 회고</strong>: 기억에 남는 순간 + 다음 달 목표 + 나에게 한 마디</td></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td><strong>하루 대화</strong>: MI 공감 스타일 — 바로 리스트 금지, 공감 → 질문 → 정리 제안</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>감정 컬러 10색</strong>: 기쁨 <span class="swatch" style="background:#FBBF24;"></span> 평온 <span class="swatch" style="background:#60A5FA;"></span> 설렘 <span class="swatch" style="background:#F472B6;"></span> 감사 <span class="swatch" style="background:#34D399;"></span> 무기력 <span class="swatch" style="background:#94A3B8;"></span> 불안 <span class="swatch" style="background:#A78BFA;"></span> 짜증 <span class="swatch" style="background:#FB923C;"></span> 슬픔 <span class="swatch" style="background:#818CF8;"></span> 피곤 <span class="swatch" style="background:#CBD5E1;"></span> 외로움 <span class="swatch" style="background:#C4B5FD;"></span></td></tr>
+    <tr><td><span class="cat cat-change">변경</span></td><td><strong>폰트</strong>: Outfit + Noto Sans KR → Inter(제목) + DM Sans(본문)</td></tr>
+    <tr><td><span class="cat cat-add">추가</span></td><td><strong>Recommendation 컨텍스트</strong>: 상단 맥락 요약 + 체크 가능 항목</td></tr>
+    <tr><td><span class="cat cat-tech">기술</span></td><td>DB 12개 테이블 (weekly_reviews, monthly_reviews, routines, routine_logs 추가)</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link primary" href="process/design_history/stage7-prototype.html" target="_blank">인터랙티브 프로토타입</a>
+    <a class="v-link" href="process/design_history/stage7-home.html" target="_blank">홈</a>
+    <a class="v-link" href="process/design_history/stage7-haru.html" target="_blank">하루</a>
+    <a class="v-link" href="process/design_history/stage7-diary.html" target="_blank">기록</a>
+    <a class="v-link" href="process/design_history/stage7-settings.html" target="_blank">설정</a>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div></div>
+
+<!-- v0.8 -->
+<div class="version v08" id="v08">
+  <div class="v-header">
+    <div>
+      <div class="v-label" style="color:#F59E0B;">v0.8 — Stage 8 (현재)</div>
+      <div class="v-title">UX Audit 기반 전면 개선</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="v-date">2026-05-07</div>
+      <div class="v-commit">b2536a9 → e08d702</div>
+    </div>
+  </div>
+  <div class="v-desc">
+    UX Pro Max 기준으로 15건 사용성 감사(Audit) 실시. Before/After 시안 제작 → 사용자 승인 → 코드 반영.
+    접근성, 가독성, 정보 밀도 전면 개선.
+  </div>
+
+  <div class="decision">
+    <strong>프로세스:</strong> 먼저 UI 감사 문서(15건) 작성 → Before/After 비교 시안 → 인터랙티브 프로토타입(폰 프레임, 4탭 전환) → 사용자와 행간/정렬/여백 라이브 조율 → 승인 후 코드 반영. 하단 메뉴바는 수정하지 않는 조건.
+  </div>
+
+  <table class="detail-table">
+    <tr><th>우선순위</th><th>구분</th><th>Before</th><th>After</th></tr>
+    <tr><td><strong>P0</strong></td><td><span class="cat cat-change">대비</span></td><td><span class="swatch" style="background:#b3b3b3;"></span>#b3b3b3 (2.6:1) — 77곳</td><td><span class="swatch" style="background:#6B7280;"></span>#6B7280 (4.6:1)</td></tr>
+    <tr><td><strong>P0</strong></td><td><span class="cat cat-change">폰트</span></td><td>0.55~0.65rem (51곳)</td><td>최소 0.7rem</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-add">접힘</span></td><td>Tomorrow/DayAfter/Yesterday 세 섹션 나열</td><td>"Tomorrow / Upcoming" 접힘 가능 (▼ 토글)</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-change">간격</span></td><td>섹션 간 18~20px 불규칙</td><td>섹션 라벨 margin-top 24px 통일, 내부 행간 축소</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-change">정렬</span></td><td>일부 센터 정렬</td><td>전체 콘텐츠 좌정렬 통일</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-change">채팅</span></td><td>헤더에 "하루" 타이틀 + "당신의 개인 비서"</td><td>pill 상태만 표시 (최소 높이)</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-remove">제거</span></td><td>버블마다 "하루" 이름 라벨</td><td>제거 (사용자가 이미 인지)</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-change">채팅</span></td><td>버블 12px 간격, padding 10/14</td><td>10px 간격, padding 6/10, line-height 1.35</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-add">범례</span></td><td>수면 차트 컬러 의미 없음</td><td>● 7h+ ○ 미달 범례 추가</td></tr>
+    <tr><td><strong>P1</strong></td><td><span class="cat cat-add">버전</span></td><td>설정에 버전 정보 없음</td><td>v0.8.0 + Build SHA + Deploy time 표시</td></tr>
+  </table>
+  <div class="v-links">
+    <a class="v-link primary" href="process/design_history/stage8-prototype.html" target="_blank">최종 프로토타입</a>
+    <a class="v-link" href="process/design_history/stage8-proposal.html" target="_blank">홈 Before/After</a>
+    <a class="v-link" href="process/design_history/stage8-haru-diary.html" target="_blank">하루/기록 시안</a>
+    <a class="v-link" href="process/ui-review-20260507.md" target="_blank">UX Audit 문서</a>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e6e6e6; text-align: center; color: #9CA3AF; font-size: 0.75rem; line-height: 1.8;">
+  <div style="font-family:'Inter';font-weight:600;color:#6B7280;">진's Life OS — Design Evolution Report</div>
+  <div>작성일: 2026-05-07 | 버전: v0.8.0 (Stage 8) | 총 8단계, 40+ 커밋</div>
+  <div>기술 스택: Next.js 16 · TypeScript · Tailwind CSS v4 · Supabase · ChatGPT API · Vercel</div>
+</div>
+
+</div>
+</body>
+</html>

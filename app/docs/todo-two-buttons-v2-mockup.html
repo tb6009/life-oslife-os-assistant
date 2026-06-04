@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — Todo 두 버튼 v2 (C 기본 + 진행일수) 시안 (2026-05-30)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5; padding: 28px 20px 60px; color: #111;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  .page-title { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .page-sub { text-align: center; font-size: 0.84rem; color: #6B7280; margin-bottom: 28px; max-width: 760px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+  .phones-row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .phone-wrap { width: 100%; max-width: 420px; }
+  .phone-label { text-align: center; font-family: 'Outfit'; font-size: 0.72rem; color: #111; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 700; }
+  .phone-title { text-align: center; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .phone-sub { text-align: center; font-size: 0.74rem; color: #9CA3AF; margin-bottom: 16px; line-height: 1.5; padding: 0 8px; }
+
+  .phone { background: #000; border-radius: 40px; padding: 8px; }
+  .screen { background: #fff; border-radius: 32px; padding: 22px 22px 30px; min-height: 800px; }
+
+  /* 섹션 라벨 */
+  .label {
+    font-family: 'Outfit'; font-size: 0.7rem; font-weight: 600;
+    color: #111; text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 18px; margin-bottom: 10px;
+  }
+  .label:first-of-type { margin-top: 0; }
+  .label-muted { color: #6B7280; font-weight: 500; }
+
+  /* todo row (v2) */
+  .todo-row {
+    display: flex; align-items: flex-start; gap: 15px;
+    padding: 10px 0; min-height: 44px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .todo-row:last-child { border-bottom: none; }
+  .todo-text-wrap { flex: 1; padding-top: 2px; }
+  .todo-text { font-size: 0.88rem; color: #111; line-height: 1.4; }
+  .todo-text.done { color: #9CA3AF; text-decoration: line-through; }
+  .todo-meta { font-size: 0.66rem; color: #9CA3AF; display: block; margin-top: 3px; text-decoration: none; }
+
+  /* 우측 액션 묶음 (gap 11px = 기본 6 + 5pt) */
+  .actions { display: flex; align-items: center; gap: 11px; flex-shrink: 0; margin-top: 2px; }
+
+  /* 진행일수 배지 (B안 출처) */
+  .streak {
+    font-family: 'Outfit'; font-size: 0.68rem; font-weight: 600;
+    color: #6B7280; padding: 3px 7px; border-radius: 10px;
+    background: #f3f4f6; min-width: 44px; text-align: center;
+    white-space: nowrap;
+  }
+  .streak.warm { color: #b45309; background: #FEF3C7; }
+  .streak.hot { color: #B91C1C; background: #FEE2E2; }
+  .streak.cold { color: #9CA3AF; background: transparent; padding-left: 0; padding-right: 0; min-width: 30px; }
+
+  /* C안 라벨 버튼 */
+  .c-btn {
+    font-size: 0.62rem; font-family: 'Outfit'; font-weight: 600;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    border: 1px solid #e5e7eb; background: #fff; color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .c-btn:hover { border-color: #2563eb; color: #2563eb; }
+  .c-btn.today { color: #2563eb; border-color: #BFDBFE; background: #EFF6FF; }
+  .c-btn.done-c { color: #fff; border-color: #2563eb; background: #2563eb; }
+
+  /* 완료 체크 */
+  .todo-circle { margin-top: 3px; width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+  .todo-circle.filled { background: #2563eb; display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.6rem; }
+
+  /* 상태 캡션 */
+  .case-cap {
+    font-family: 'Outfit'; font-size: 0.6rem; font-weight: 600;
+    color: #7C3AED; text-transform: uppercase; letter-spacing: 0.08em;
+    margin-top: 4px; margin-bottom: 2px;
+  }
+
+  /* 설명 카드 */
+  .explain-card {
+    max-width: 760px; margin: 30px auto 0;
+    background: #fff; border-radius: 12px; padding: 24px 28px;
+    border-top: 4px solid #7C3AED;
+  }
+  .ex-h { font-family: 'Outfit'; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6B7280; margin-bottom: 4px; }
+  .ex-t { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
+  .ex-list { font-size: 0.86rem; line-height: 1.75; color: #333; }
+  .ex-list li { margin-bottom: 6px; padding-left: 14px; position: relative; }
+  .ex-list li::before { content: "·"; position: absolute; left: 4px; color: #9CA3AF; font-weight: 700; }
+  .ex-list code { background: #f3f4f6; padding: 1px 6px; border-radius: 3px; font-size: 0.82rem; }
+  .ex-list b { color: #111; }
+
+  /* 데이터 / 규칙 박스 */
+  .rules-box {
+    max-width: 760px; margin: 16px auto 0;
+    background: #111; color: #fff; border-radius: 12px;
+    padding: 22px 28px;
+  }
+  .rules-h { font-family: 'Outfit'; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #A78BFA; margin-bottom: 8px; }
+  .rules-body { font-size: 0.84rem; line-height: 1.75; color: #D1D5DB; }
+  .rules-body b { color: #fff; }
+  .rules-body code { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 3px; font-size: 0.8rem; color: #fff; }
+
+  /* 배지 범례 */
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: #D1D5DB; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-title">Todo 두 버튼 v2 — C안 + 진행일수</div>
+  <div class="page-sub">
+    피드백: "C안을 기본으로, B안의 '몇일째'를 오늘 왼쪽에 붙이자."<br>
+    <b>오늘 / 완료 라벨 버튼 + 좌측에 진행일수 배지</b>. 누적 진행을 한 줄에 다 보여준다.
+  </div>
+
+  <div class="phones-row">
+
+    <!-- ============== 메인 시안 ============== -->
+    <div class="phone-wrap">
+      <div class="phone-label" style="color:#7C3AED;">v2 시안</div>
+      <div class="phone-title">진행일수 + 오늘 + 완료</div>
+      <div class="phone-sub">한 행에 모든 상태가 보임.<br>왼쪽부터: 제목 → 진행일수 → 오늘 → 완료</div>
+
+      <div class="phone"><div class="screen">
+        <div class="label">Todo</div>
+
+        <!-- Case 1: 신규, 아직 진행 없음 -->
+        <div class="case-cap">신규 · 아직 진행 없음</div>
+        <div class="todo-row">
+          <div class="todo-text-wrap">
+            <div class="todo-text">정기 검진 예약</div>
+            <span class="todo-meta">5/29 추가</span>
+          </div>
+          <div class="actions">
+            <div class="streak cold">—</div>
+            <div class="c-btn">오늘</div>
+            <div class="c-btn">완료</div>
+          </div>
+        </div>
+
+        <!-- Case 2: 오늘 처음 진행 (1일째) -->
+        <div class="case-cap">오늘 처음 진행</div>
+        <div class="todo-row">
+          <div class="todo-text-wrap">
+            <div class="todo-text">슈퍼노바 랜딩 카피</div>
+            <span class="todo-meta">5/30 시작 · 오늘 진행</span>
+          </div>
+          <div class="actions">
+            <div class="streak">1일째</div>
+            <div class="c-btn today">오늘</div>
+            <div class="c-btn">완료</div>
+          </div>
+        </div>
+
+        <!-- Case 3: 연속 3일째 -->
+        <div class="case-cap">연속 진행 (3일+ amber)</div>
+        <div class="todo-row">
+          <div class="todo-text-wrap">
+            <div class="todo-text">논문 챕터 3 초고</div>
+            <span class="todo-meta">5/28 시작 · 마지막 진행 오늘</span>
+          </div>
+          <div class="actions">
+            <div class="streak warm">3일째</div>
+            <div class="c-btn today">오늘</div>
+            <div class="c-btn">완료</div>
+          </div>
+        </div>
+
+        <!-- Case 4: 7일+ 묵힘 (오늘 안 누름) -->
+        <div class="case-cap">7일+ 묵힘 (red, 오늘 안 함)</div>
+        <div class="todo-row">
+          <div class="todo-text-wrap">
+            <div class="todo-text">연구비 정산 서류 보완</div>
+            <span class="todo-meta">5/23 시작 · 마지막 진행 5/27</span>
+          </div>
+          <div class="actions">
+            <div class="streak hot">8일째</div>
+            <div class="c-btn">오늘</div>
+            <div class="c-btn">완료</div>
+          </div>
+        </div>
+
+        <!-- Case 5: 끊김 후 다시 -->
+        <div class="case-cap">끊김 후 오늘 다시</div>
+        <div class="todo-row">
+          <div class="todo-text-wrap">
+            <div class="todo-text">강연 슬라이드 정리</div>
+            <span class="todo-meta">5/25 시작 · 3일 쉼 후 오늘</span>
+          </div>
+          <div class="actions">
+            <div class="streak">2일 진행</div>
+            <div class="c-btn today">오늘</div>
+            <div class="c-btn">완료</div>
+          </div>
+        </div>
+
+        <div class="label" style="margin-top:24px;">완료 (최근 7일)</div>
+
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text-wrap">
+            <div class="todo-text done">세미나 자료 송부</div>
+            <span class="todo-meta">5/29 · 당일 완료</span>
+          </div>
+        </div>
+
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text-wrap">
+            <div class="todo-text done">연구실 비품 신청</div>
+            <span class="todo-meta">5/22 → 5/28 · 6일 작업</span>
+          </div>
+        </div>
+
+      </div></div>
+    </div>
+
+  </div>
+
+  <!-- 설명 -->
+  <div class="explain-card">
+    <div class="ex-h" style="color:#7C3AED;">v2 — C안 기본 + B안 진행일수 머지</div>
+    <div class="ex-t">한 줄에 진행 상태가 다 보이는 minimal 디자인</div>
+    <ul class="ex-list">
+      <li><b>행 구조</b>: <code>[제목 + 메타] [진행일수 배지] [오늘] [완료]</code> — 우측에 액션·상태 묶음</li>
+      <li><b>오늘 버튼</b>: 누르면 파란색 활성 상태(<code>.today</code>)로 바뀌고 메타에 "마지막 진행 오늘" 갱신</li>
+      <li><b>완료 버튼</b>: 누르면 Done 섹션으로 이동 (기존 동작 그대로)</li>
+      <li><b>진행일수 배지 색상 규칙</b> (Done의 소요일 색상 규칙과 통일):
+        <ul style="list-style:none; margin-top:4px; padding-left:8px;">
+          <li>· <span style="color:#9CA3AF;">—</span> : 진행 없음 (회색·옅음)</li>
+          <li>· <span style="color:#6B7280;">1~2일째</span> : 회색 (조용)</li>
+          <li>· <span style="color:#b45309;">3~6일째</span> : amber (지속)</li>
+          <li>· <span style="color:#B91C1C;">7일+ 째</span> : red (오래 묵힘, 회고 신호)</li>
+        </ul>
+      </li>
+      <li><b>"N일째" 의미</b>: 시작일부터 오늘까지 경과일 (연속 진행이 아닌 묵힌 정도) — 5/23 시작이면 5/30 = 8일째</li>
+      <li><b>"N일 진행" (Case 5)</b>: 실제 "오늘" 누른 횟수 누적. 끊긴 적 있으면 별도 표시</li>
+    </ul>
+  </div>
+
+  <!-- 데이터/규칙 -->
+  <div class="rules-box">
+    <div class="rules-h">데이터 · 구현 비용</div>
+    <div class="rules-body">
+      <b>todos 테이블에 2개 컬럼만 추가</b> — 새 테이블 없음.<br>
+      · <code>last_progressed_at TIMESTAMPTZ</code> — 마지막 "오늘" 누른 시각<br>
+      · <code>progress_count INT DEFAULT 0</code> — "오늘" 누른 총 횟수 (Case 5의 "2일 진행")<br><br>
+      "N일째"는 <code>today - created_at</code> 계산식으로 클라이언트에서 산출 → 별도 저장 X.<br>
+      ActivityTracker에는 <code>last_progressed_at</code> 변경일을 1포인트로 카운트.<br><br>
+      <b>예상 작업량</b>: 마이그레이션 1개 + TodoList 컴포넌트 + API 2개(progress/undo) ≈ 2~3시간.
+      <div class="legend">
+        <div class="legend-item"><span class="streak cold" style="font-family:'Outfit';">—</span> 진행 없음</div>
+        <div class="legend-item"><span class="streak" style="font-family:'Outfit';">1일째</span> 시작·초기</div>
+        <div class="legend-item"><span class="streak warm" style="font-family:'Outfit';">3일째</span> 지속</div>
+        <div class="legend-item"><span class="streak hot" style="font-family:'Outfit';">8일째</span> 묵힘</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

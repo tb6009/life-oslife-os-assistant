@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — 홈 3탭 시안 v2 (v0.1 디자인 언어 일관 적용)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    padding: 28px 20px 60px;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1500px; margin: 0 auto; }
+  .page-title { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .page-sub { text-align: center; font-size: 0.84rem; color: #6B7280; margin-bottom: 28px; max-width: 720px; margin-left: auto; margin-right: auto; }
+
+  .phones-row {
+    display: flex; gap: 28px;
+    justify-content: center; flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .phone-wrap { width: 100%; max-width: 380px; }
+  .phone-label {
+    text-align: center; font-family: 'Outfit';
+    font-size: 0.72rem; color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .phone-sub {
+    text-align: center; font-size: 0.74rem;
+    color: #9CA3AF; margin-bottom: 16px;
+  }
+
+  .phone {
+    background: #000;
+    border-radius: 40px; padding: 8px;
+  }
+  .screen {
+    background: #fff;
+    border-radius: 32px; overflow: hidden;
+    padding: 18px 22px 80px;
+    min-height: 1280px;
+    position: relative;
+  }
+  .bottom-nav {
+    position: absolute;
+    bottom: 8px; left: 8px; right: 8px;
+    height: 56px;
+    background: rgba(255,255,255,0.95);
+    border-top: 1px solid #ececec;
+    border-radius: 0 0 24px 24px;
+    display: flex; justify-content: space-around; align-items: center;
+  }
+  .nav-item { text-align: center; font-size: 0.62rem; color: #9CA3AF; font-family: 'Outfit'; }
+  .nav-item.active { color: #60A5FA; font-weight: 600; }
+  .nav-item .ico { font-size: 1.1rem; margin-bottom: 2px; display: block; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%);
+    border-radius: 20px; padding: 20px;
+    color: #fff; margin-bottom: 14px;
+  }
+  .hero-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-mini { font-family: 'Outfit'; font-size: 0.62rem; opacity: 0.7; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .hero-temp { font-family: 'Outfit'; font-size: 2.4rem; font-weight: 300; letter-spacing: -0.03em; line-height: 1; }
+  .hero-cond { font-size: 0.85rem; font-weight: 500; margin-top: 8px; }
+  .hero-range { font-size: 0.75rem; opacity: 0.85; margin-left: 10px; }
+  .hero-date { text-align: right; font-family: 'Outfit'; }
+  .hero-date .day { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; }
+  .hero-date .dt { font-size: 0.74rem; opacity: 0.85; margin-top: 2px; }
+
+  /* Greeting */
+  .greeting { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 600; color: #000; margin-top: 12px; margin-bottom: 2px; }
+  .date { font-family: 'Outfit'; font-size: 0.7rem; color: #6B7280; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .insight { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .insight-pill {
+    font-size: 0.7rem; color: #6B7280;
+    background: #f3f4f6; padding: 4px 10px; border-radius: 12px;
+  }
+  .insight-pill.accent { background: rgba(96,165,250,0.12); color: #4A6B8E; }
+
+  /* ===== 공통 디자인 언어 ===== */
+  /* 1) 섹션 헤더 (uppercase tracking 큰 라벨 + 우측 카운트/메타) */
+  .sx-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 22px; margin-bottom: 10px;
+  }
+  .sx-title {
+    font-family: 'Outfit';
+    font-size: 0.72rem; font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .sx-meta { font-size: 0.68rem; color: #9CA3AF; font-family: 'Outfit'; }
+
+  /* 2) 주차/구간 네비 — Week 탭 패턴 */
+  .nav-title { text-align: center; font-size: 0.84rem; font-weight: 600; color: #333; margin-top: 4px; margin-bottom: 2px; }
+  .nav-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-bottom: 14px;
+  }
+  .nav-row button { background: none; border: none; font-size: 1.05rem; color: #6B7280; padding: 4px 8px; cursor: pointer; }
+  .nav-row button.disabled { color: #D1D5DB; cursor: not-allowed; }
+  .nav-row .label { font-size: 0.78rem; color: #6B7280; }
+
+  /* 3) 통계 카드 (3열) */
+  .stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-bottom: 18px;
+  }
+  .stat-card { padding: 12px 8px; background: #fafafa; border-radius: 10px; text-align: center; }
+  .stat-card .num { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; }
+  .stat-card .lb { font-size: 0.62rem; color: #808080; margin-top: 2px; }
+  .stat-card.green .num { color: #5E9972; }
+  .stat-card.blue .num { color: #5A86B0; }
+
+  /* 4) 날짜 그룹 (bottom border 헤더) */
+  .day-group { margin-bottom: 14px; }
+  .day-head {
+    font-size: 0.7rem; font-weight: 600; color: #6B7280;
+    padding-bottom: 4px; border-bottom: 1px solid #ececec;
+    margin-bottom: 6px;
+  }
+
+  /* 5) 라인 항목 (좌측 컬러 보더 + 절제된 회색 본문) */
+  .li {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 3px 0 3px 8px;
+    margin-bottom: 2px;
+    border-left: 2px solid transparent;
+  }
+  .li.done {
+    border-left-color: #d1fae5;
+  }
+  .li.tag-paper { border-left-color: rgba(94,153,114,0.4); }
+  .li.tag-exercise { border-left-color: rgba(126,107,168,0.4); }
+  .li.tag-write { border-left-color: rgba(90,134,176,0.4); }
+  .li.tag-research { border-left-color: rgba(168,114,138,0.4); }
+  .li.tag-meeting { border-left-color: rgba(160,124,80,0.4); }
+  .li .ico { font-size: 0.78rem; flex-shrink: 0; line-height: 1.5; }
+  .li.done .ico { color: #5E9972; }
+  .li .text {
+    font-size: 0.82rem; line-height: 1.5; flex: 1;
+    color: #333;
+  }
+  .li.done .text { color: #6B7280; text-decoration: line-through; }
+  .li .small {
+    display: block;
+    font-size: 0.62rem; color: #9CA3AF;
+    margin-top: 1px;
+    font-family: 'Outfit';
+  }
+
+  /* TAG chip */
+  .chip {
+    display: inline-block; font-size: 0.7rem; font-weight: 500;
+    padding: 1px 7px; border-radius: 10px; margin: 0 1px;
+  }
+  .chip-paper { background: rgba(94,153,114,0.18); color: #5E9972; }
+  .chip-exercise { background: rgba(126,107,168,0.18); color: #7E6BA8; }
+  .chip-write { background: rgba(90,134,176,0.18); color: #5A86B0; }
+  .chip-research { background: rgba(168,114,138,0.18); color: #A8728A; }
+  .chip-meeting { background: rgba(160,124,80,0.18); color: #A07C50; }
+  .chip-health { background: rgba(154,138,85,0.18); color: #9A8A55; }
+
+  /* Today 항목 */
+  .today-sum { font-size: 1.1rem; font-weight: 500; color: #000; margin-bottom: 4px; }
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0; font-size: 0.82rem;
+  }
+  .check {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid #60A5FA; flex-shrink: 0;
+  }
+  .check.done { background: #60A5FA; border: none; display: flex; align-items: center; justify-content: center; }
+  .check.done::after { content: "✓"; color: #fff; font-size: 0.7rem; }
+  .item.done .text { color: #6B7280; text-decoration: line-through; }
+  .item .text { flex: 1; }
+  .item .x { color: #D1D5DB; font-size: 0.8rem; padding: 0 4px; }
+  .item .meta { font-size: 0.65rem; color: #6B7280; font-family: 'Outfit'; }
+
+  /* 입력 */
+  .input-row { display: flex; gap: 8px; align-items: flex-start; margin-top: 4px; margin-bottom: 10px; }
+  .input-row textarea {
+    flex: 1; background: #f8f8f8; border: 1px solid #e6e6e6;
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 0.82rem; color: #9CA3AF;
+    font-family: inherit; resize: none; line-height: 1.5;
+    min-height: 48px;
+  }
+  .input-row button {
+    background: transparent; border: 1px solid #60A5FA;
+    color: #60A5FA; padding: 8px 14px;
+    border-radius: 8px; font-size: 0.78rem; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* 추천 인용 */
+  .recommend-quote {
+    border-left: 3px solid #60A5FA;
+    padding: 8px 12px;
+    font-size: 0.82rem; color: #6B7280;
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+
+  /* ===== 3탭 ===== */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #e6e6e6;
+    margin-top: 24px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0;
+    font-family: 'Outfit'; font-size: 0.74rem; font-weight: 400;
+    color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    position: relative; cursor: pointer;
+  }
+  .tab.active { color: #000; font-weight: 600; }
+  .tab.active::after {
+    content: ""; position: absolute;
+    bottom: -1px; left: 25%; right: 25%;
+    height: 2px; background: #60A5FA;
+  }
+  .tab .count {
+    display: inline-block; font-size: 0.6rem;
+    color: #9CA3AF; margin-left: 4px;
+  }
+  .tab.active .count { color: #60A5FA; }
+
+  .always {
+    border-left: 3px solid #5E9972;
+    padding-left: 8px;
+    margin-left: -11px;
+  }
+  .always-label {
+    font-family: 'Outfit';
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: #5E9972;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    margin-top: -2px;
+  }
+
+  /* footer */
+  .footnote {
+    max-width: 980px; margin: 36px auto 0;
+    padding: 18px 22px;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    font-size: 0.84rem; line-height: 1.65; color: #4B5563;
+  }
+  .footnote h3 { font-size: 0.95rem; margin-bottom: 10px; color: #111; }
+  .footnote ul { padding-left: 20px; margin-top: 4px; }
+  .footnote li { margin-bottom: 4px; }
+  .footnote code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="page-title">홈 3탭 시안 v2 — 디자인 언어 일관 적용</div>
+<div class="page-sub">v0.1 "완료 Todo 정리"의 디테일(절제된 컬러 / 좌측 컬러 보더 / 날짜 그룹 / 주차 네비)을 3개 탭 모두에 통일 적용</div>
+
+<div class="phones-row">
+
+  <!-- TAB 1: Daily -->
+  <div class="phone-wrap">
+    <div class="phone-label">탭 1 활성</div>
+    <div class="phone-sub">Daily — Recommendation + Todo</div>
+
+    <div class="phone"><div class="screen">
+
+      <!-- 항상 보이는 영역 -->
+      <div class="always">
+        <div class="always-label">▼ 항상 보임</div>
+
+        <div class="hero">
+          <div class="hero-row">
+            <div>
+              <div class="hero-mini">진's LifeOS</div>
+              <div class="hero-temp">19°</div>
+              <div><span class="hero-cond">맑음</span><span class="hero-range">17 / 23°</span></div>
+            </div>
+            <div class="hero-date"><div class="day">SUN</div><div class="dt">MAY 25</div></div>
+          </div>
+        </div>
+
+        <div class="date">SUN, MAY 25</div>
+        <div class="greeting">Good Afternoon</div>
+        <div class="insight">
+          <span class="insight-pill">맑음 22°</span>
+          <span class="insight-pill accent">수면 6.5h</span>
+          <span class="insight-pill accent">평온</span>
+        </div>
+
+        <!-- Today -->
+        <div class="sx-head">
+          <div class="sx-title">Today</div>
+          <div class="sx-meta">3건 · 1/3 완료</div>
+        </div>
+        <div class="today-sum">일요일</div>
+        <div class="item"><div class="check"></div><div class="text">10:00 학회 발표</div></div>
+        <div class="item done"><div class="check done"></div><div class="text">14:00 인터뷰 미팅</div></div>
+        <div class="item"><div class="check"></div><div class="text">18:00 운동</div></div>
+
+        <!-- Routine -->
+        <div class="sx-head">
+          <div class="sx-title">Routine</div>
+          <div class="sx-meta">2/4 · 🔥5일</div>
+        </div>
+        <div class="input-row">
+          <textarea placeholder="루틴 추가 (예: 아침 스트레칭 #운동)"></textarea>
+          <button>추가</button>
+        </div>
+        <div class="item done"><div class="check done"></div><div class="text">아침 스트레칭 <span class="chip chip-exercise">#운동</span></div><span class="meta">5일째</span></div>
+        <div class="item done"><div class="check done"></div><div class="text">물 3잔 <span class="chip chip-health">#건강</span></div><span class="meta">3일째</span></div>
+        <div class="item"><div class="check"></div><div class="text">저녁 명상 <span class="chip chip-research">#마음</span></div></div>
+      </div>
+
+      <!-- ====== 3탭 ====== -->
+      <div class="tabs">
+        <div class="tab active">Daily<span class="count">2</span></div>
+        <div class="tab">Activity</div>
+        <div class="tab">Completed<span class="count">14</span></div>
+      </div>
+
+      <!-- Daily 탭 헤더 (v0.1 스타일) -->
+      <div class="sx-head">
+        <div class="sx-title">💡 Recommendation</div>
+        <div class="sx-meta">오후 14:30</div>
+      </div>
+      <div class="recommend-quote">
+        오늘은 일정이 많아요. 점심 시간 짧은 명상 5분 어떠세요?
+      </div>
+
+      <div class="sx-head">
+        <div class="sx-title">✎ Todo</div>
+        <div class="sx-meta">2건 · 0/2 완료</div>
+      </div>
+      <div class="input-row">
+        <textarea placeholder="할 일 추가... (#태그 가능)"></textarea>
+        <button>추가</button>
+      </div>
+      <!-- v0.1 라인 항목 디자인 적용 -->
+      <div class="li tag-paper">
+        <span class="ico">○</span>
+        <span class="text">
+          논문 3장 정리 <span class="chip chip-paper">#논문읽기</span>
+          <span class="small">5/24 14:09</span>
+        </span>
+      </div>
+      <div class="li tag-write">
+        <span class="ico">○</span>
+        <span class="text">
+          Rise 사업계획서 수정 <span class="chip chip-write">#글쓰기</span>
+          <span class="small">5/24 09:30</span>
+        </span>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="ico">🏠</span>홈</div>
+        <div class="nav-item"><span class="ico">📝</span>기록</div>
+        <div class="nav-item"><span class="ico">🌙</span>하루</div>
+        <div class="nav-item"><span class="ico">⚙️</span>설정</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- TAB 2: Activity -->
+  <div class="phone-wrap">
+    <div class="phone-label">탭 2 활성</div>
+    <div class="phone-sub">Activity — #태그 추적 + 카테고리</div>
+
+    <div class="phone"><div class="screen">
+
+      <!-- 항상 영역 (압축) -->
+      <div class="always">
+        <div class="always-label">▼ 항상 보임</div>
+        <div class="hero">
+          <div class="hero-row">
+            <div>
+              <div class="hero-mini">진's LifeOS</div>
+              <div class="hero-temp">19°</div>
+              <div><span class="hero-cond">맑음</span><span class="hero-range">17 / 23°</span></div>
+            </div>
+            <div class="hero-date"><div class="day">SUN</div><div class="dt">MAY 25</div></div>
+          </div>
+        </div>
+        <div class="date">SUN, MAY 25</div>
+        <div class="greeting">Good Afternoon</div>
+        <div class="insight">
+          <span class="insight-pill">맑음 22°</span>
+          <span class="insight-pill accent">수면 6.5h</span>
+        </div>
+        <div class="sx-head">
+          <div class="sx-title">Today</div>
+          <div class="sx-meta">3건</div>
+        </div>
+        <div class="item"><div class="check"></div><div class="text">10:00 학회 발표</div></div>
+        <div class="item done"><div class="check done"></div><div class="text">14:00 인터뷰 미팅</div></div>
+
+        <div class="sx-head">
+          <div class="sx-title">Routine</div>
+          <div class="sx-meta">2/4</div>
+        </div>
+        <div class="item done"><div class="check done"></div><div class="text">아침 스트레칭 <span class="chip chip-exercise">#운동</span></div></div>
+      </div>
+
+      <!-- 3탭 -->
+      <div class="tabs">
+        <div class="tab">Daily<span class="count">2</span></div>
+        <div class="tab active">Activity</div>
+        <div class="tab">Completed<span class="count">14</span></div>
+      </div>
+
+      <!-- Activity 탭 — v0.1 디자인 언어 적용 -->
+      <div class="sx-head">
+        <div class="sx-title">📈 Activity</div>
+        <div class="sx-meta">최근 7일 · 5개 소스</div>
+      </div>
+
+      <!-- 추적기 (배경 없이 깔끔하게) -->
+      <div style="margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+          <span class="chip chip-paper" style="min-width: 78px; text-align: left;">#논문읽기</span>
+          <div style="display: flex; gap: 3px; flex: 1;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5E9972; opacity:0.85;"></div>
+          </div>
+          <div style="text-align:right; min-width: 70px;">
+            <div style="font-size:0.7rem; color:#6B7280; font-family:'Outfit'; font-weight:500;">6일</div>
+            <div style="font-size:0.58rem; color:#9CA3AF; font-family:'Outfit';">thesis·todo</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+          <span class="chip chip-exercise" style="min-width: 78px; text-align: left;">#운동</span>
+          <div style="display: flex; gap: 3px; flex: 1;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#7E6BA8; opacity:0.85;"></div>
+          </div>
+          <div style="text-align:right; min-width: 70px;">
+            <div style="font-size:0.7rem; color:#6B7280; font-family:'Outfit'; font-weight:500;">6일</div>
+            <div style="font-size:0.58rem; color:#9CA3AF; font-family:'Outfit';">routine</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+          <span class="chip chip-write" style="min-width: 78px; text-align: left;">#글쓰기</span>
+          <div style="display: flex; gap: 3px; flex: 1;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#5A86B0; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5A86B0; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5A86B0; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#5A86B0; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+          </div>
+          <div style="text-align:right; min-width: 70px;">
+            <div style="font-size:0.7rem; color:#6B7280; font-family:'Outfit'; font-weight:500;">4일</div>
+            <div style="font-size:0.58rem; color:#9CA3AF; font-family:'Outfit';">work·todo</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+          <span class="chip chip-research" style="min-width: 78px; text-align: left;">#연구계보</span>
+          <div style="display: flex; gap: 3px; flex: 1;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#A8728A; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#A8728A; opacity:0.85;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#E5E7EB;"></div>
+            <div style="width:10px; height:10px; border-radius:50%; background:#A8728A; opacity:0.85;"></div>
+          </div>
+          <div style="text-align:right; min-width: 70px;">
+            <div style="font-size:0.7rem; color:#6B7280; font-family:'Outfit'; font-weight:500;">3일</div>
+            <div style="font-size:0.58rem; color:#9CA3AF; font-family:'Outfit';">thesis</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카테고리별 최근 활동 (v0.1 라인 디자인 적용) -->
+      <div class="sx-head">
+        <div class="sx-title">최근 활동</div>
+        <div class="sx-meta">태그별</div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-head" style="color:#5E9972;">📚 #논문읽기 · 6건</div>
+        <div class="li tag-paper">
+          <span class="text">푸코 『말과 사물』 3장 30p <span class="small">오늘 · thesis</span></span>
+        </div>
+        <div class="li tag-paper">
+          <span class="text">에피스테메 개념 정리 <span class="small">어제 · thesis</span></span>
+        </div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-head" style="color:#5A86B0;">✍️ #글쓰기 · 4건</div>
+        <div class="li tag-write">
+          <span class="text">063 대시보드 토큰 정리 <span class="small">어제 · work</span></span>
+        </div>
+        <div class="li tag-write">
+          <span class="text">Rise 사업계획서 수정 <span class="small">5/22 · todo</span></span>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="ico">🏠</span>홈</div>
+        <div class="nav-item"><span class="ico">📝</span>기록</div>
+        <div class="nav-item"><span class="ico">🌙</span>하루</div>
+        <div class="nav-item"><span class="ico">⚙️</span>설정</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- TAB 3: Completed -->
+  <div class="phone-wrap">
+    <div class="phone-label">탭 3 활성</div>
+    <div class="phone-sub">Completed — 주차별 완료 정리</div>
+
+    <div class="phone"><div class="screen">
+
+      <div class="always">
+        <div class="always-label">▼ 항상 보임</div>
+        <div class="hero">
+          <div class="hero-row">
+            <div>
+              <div class="hero-mini">진's LifeOS</div>
+              <div class="hero-temp">19°</div>
+              <div><span class="hero-cond">맑음</span><span class="hero-range">17 / 23°</span></div>
+            </div>
+            <div class="hero-date"><div class="day">SUN</div><div class="dt">MAY 25</div></div>
+          </div>
+        </div>
+        <div class="date">SUN, MAY 25</div>
+        <div class="greeting">Good Afternoon</div>
+        <div class="insight">
+          <span class="insight-pill">맑음 22°</span>
+          <span class="insight-pill accent">수면 6.5h</span>
+        </div>
+        <div class="sx-head">
+          <div class="sx-title">Today</div>
+          <div class="sx-meta">3건</div>
+        </div>
+        <div class="item"><div class="check"></div><div class="text">10:00 학회 발표</div></div>
+        <div class="item done"><div class="check done"></div><div class="text">14:00 인터뷰 미팅</div></div>
+        <div class="sx-head">
+          <div class="sx-title">Routine</div>
+          <div class="sx-meta">2/4</div>
+        </div>
+        <div class="item done"><div class="check done"></div><div class="text">아침 스트레칭 <span class="chip chip-exercise">#운동</span></div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab">Daily<span class="count">2</span></div>
+        <div class="tab">Activity</div>
+        <div class="tab active">Completed<span class="count">14</span></div>
+      </div>
+
+      <!-- v0.1 디자인 그대로 적용 -->
+      <div class="sx-head">
+        <div class="sx-title">✓ Completed</div>
+        <div class="sx-meta">8건 (이번 주)</div>
+      </div>
+
+      <div class="nav-title">5월 4번째 주</div>
+      <div class="nav-row">
+        <button>←</button>
+        <span class="label">5/24 ~ 5/30</span>
+        <button class="disabled">→</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card green"><div class="num">14</div><div class="lb">이번 주</div></div>
+        <div class="stat-card green"><div class="num">45</div><div class="lb">5월 누적</div></div>
+        <div class="stat-card green"><div class="num">12</div><div class="lb">평균/주</div></div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-head">오늘 (일) · 2건</div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">논문 3장 정리 <span class="chip chip-paper">#논문읽기</span></span>
+        </div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">메일 답장</span>
+        </div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-head">어제 (토) · 3건</div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">아침 운동 30분 <span class="chip chip-exercise">#운동</span></span>
+        </div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">Rise 보고서 초안 <span class="chip chip-write">#글쓰기</span></span>
+        </div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">063 토큰 정리 <span class="chip chip-write">#글쓰기</span></span>
+        </div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-head">5/22 (목) · 3건</div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">DSAPG 회의록 <span class="chip chip-meeting">#회의</span></span>
+        </div>
+        <div class="li done">
+          <span class="ico">✓</span>
+          <span class="text">푸코 4장 <span class="chip chip-paper">#논문읽기</span></span>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="ico">🏠</span>홈</div>
+        <div class="nav-item"><span class="ico">📝</span>기록</div>
+        <div class="nav-item"><span class="ico">🌙</span>하루</div>
+        <div class="nav-item"><span class="ico">⚙️</span>설정</div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<div class="footnote">
+  <h3>🎨 v0.1에서 가져온 5가지 공통 디자인 언어</h3>
+  <ul>
+    <li><b>1. 섹션 헤더 형식</b> — <code>UPPERCASE TRACKING + 우측 메타</code> 일관 적용 (Today/Routine/Recommendation/Todo/Activity/Completed 모두)</li>
+    <li><b>2. 주차/구간 네비</b> — <code>[← 라벨 →]</code> 패턴 (현재 Completed에 있던 것을 Activity의 '최근 7일'에도 확장 가능)</li>
+    <li><b>3. 통계 카드 3열</b> — 회색 배경 + 컬러 숫자 + 작은 라벨 (Completed는 녹색, Activity는 후속에서 적용 가능)</li>
+    <li><b>4. 날짜/카테고리 그룹</b> — <code>border-bottom: 1px solid</code> 작은 헤더 + 그 아래 항목 (Completed의 날짜 그룹 → Activity의 태그 그룹에 같은 패턴)</li>
+    <li><b>5. 라인 항목</b> — 좌측 컬러 보더 2px + 절제된 회색 본문 + 작은 메타 (Todo/Activity 항목/Completed 항목 모두 동일 패턴)</li>
+  </ul>
+  <p style="margin-top: 10px;">
+    <b>결과</b>: Activity 탭은 기존 그라데이션 박스를 벗고 v0.1 톤으로 정돈됨. Daily 탭은 Todo 항목이 v0.1 라인 스타일 적용. Completed 탭은 그대로(이미 v0.1 디자인).
+  </p>
+</div>
+
+</div>
+</body>
+</html>

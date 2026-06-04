@@ -1,0 +1,28 @@
+# Personal data
+personal/data/
+personal/reports/daily/
+personal/reports/weekly/
+personal/reports/monthly/
+
+# App dependencies & build
+app/node_modules/
+app/.next/
+app/out/
+app/coverage/
+app/.pnp.*
+app/.yarn/*
+!app/.yarn/patches
+!app/.yarn/plugins
+!app/.yarn/releases
+!app/.yarn/versions
+
+# Secrets
+.env
+.env.local
+.env*.local
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp

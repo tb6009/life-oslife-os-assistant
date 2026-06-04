@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — 홈 전체 통합 시안 (v0.9.5)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    padding: 28px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+    color: #333;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center;
+    font-size: 0.84rem;
+    color: #6B7280;
+    margin-bottom: 28px;
+  }
+
+  /* 좌측 라벨 + 우측 전화 */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 420px;
+    gap: 40px;
+    justify-content: center;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .annotations {
+    position: sticky;
+    top: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e6e6e6;
+  }
+  .anno-title {
+    font-family: 'Outfit';
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ececec;
+  }
+  .anno-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    border-bottom: 1px dashed #f0f0f0;
+  }
+  .anno-num {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #60A5FA;
+    color: #fff;
+    text-align: center;
+    line-height: 22px;
+    font-family: 'Outfit';
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+  .anno-num.new { background: #5E9972; }
+  .anno-num.changed { background: #D97706; }
+  .anno-name { font-weight: 600; color: #333; }
+  .anno-desc { color: #6B7280; font-size: 0.74rem; }
+  .anno-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+    font-family: 'Outfit';
+    font-weight: 600;
+  }
+  .anno-tag.new { background: rgba(94,153,114,0.15); color: #5E9972; }
+  .anno-tag.changed { background: rgba(217,119,6,0.15); color: #D97706; }
+
+  /* 핸드폰 프레임 */
+  .phone {
+    background: #000;
+    border-radius: 40px;
+    padding: 8px;
+  }
+  .screen {
+    background: #fff;
+    border-radius: 32px;
+    overflow: hidden;
+    min-height: 1600px;
+    padding: 18px 22px 80px;
+    position: relative;
+  }
+  /* 하단 메뉴바 */
+  .bottom-nav {
+    position: absolute;
+    bottom: 8px; left: 8px; right: 8px;
+    height: 56px;
+    background: rgba(255,255,255,0.95);
+    border-top: 1px solid #ececec;
+    border-radius: 0 0 24px 24px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 12px;
+  }
+  .nav-item {
+    text-align: center;
+    font-size: 0.62rem;
+    color: #9CA3AF;
+    font-family: 'Outfit';
+  }
+  .nav-item.active { color: #60A5FA; font-weight: 600; }
+  .nav-item .ico {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  /* 섹션 마커 (시안용 — 실제 앱엔 없음) */
+  .marker {
+    position: relative;
+    border: 2px dashed transparent;
+    padding: 2px;
+    border-radius: 12px;
+    margin-bottom: 4px;
+  }
+  .marker.highlight-new { border-color: rgba(94,153,114,0.5); }
+  .marker.highlight-changed { border-color: rgba(217,119,6,0.5); }
+  .marker-num {
+    position: absolute;
+    top: -8px; left: -8px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #60A5FA;
+    color: #fff;
+    font-family: 'Outfit';
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-align: center;
+    line-height: 18px;
+    z-index: 2;
+  }
+  .marker-num.new { background: #5E9972; }
+  .marker-num.changed { background: #D97706; }
+
+  /* WeatherHero */
+  .hero {
+    background: linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%);
+    border-radius: 18px;
+    padding: 16px 18px;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  .hero-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-temp { font-family: 'Outfit'; font-size: 1.8rem; font-weight: 600; }
+  .hero-cond { font-size: 0.74rem; opacity: 0.9; }
+  .hero-range { font-size: 0.7rem; opacity: 0.85; margin-top: 2px; }
+  .hero-time { font-family: 'Outfit'; font-size: 0.75rem; opacity: 0.85; text-align: right; }
+
+  /* Greeting */
+  .date {
+    font-family: 'Outfit'; font-size: 0.7rem; color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+  .greeting {
+    font-family: 'Outfit';
+    font-size: 1.6rem; font-weight: 600; color: #000;
+    margin-bottom: 6px;
+  }
+  .greet-sub {
+    font-size: 0.82rem; color: #6B7280; line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  /* Daily Insight */
+  .insight {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .insight-pill {
+    font-size: 0.7rem; color: #6B7280;
+    background: #f3f4f6; padding: 4px 10px;
+    border-radius: 12px;
+  }
+  .insight-pill.accent { background: rgba(96,165,250,0.12); color: #4A6B8E; }
+
+  .recommend-box {
+    border-left: 3px solid #60A5FA;
+    padding: 8px 12px;
+    margin-bottom: 18px;
+    font-size: 0.8rem;
+    color: #6B7280;
+    line-height: 1.55;
+  }
+
+  /* Section */
+  .section-label {
+    font-family: 'Outfit';
+    font-size: 0.7rem; font-weight: 500;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 20px; margin-bottom: 4px;
+  }
+  .section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 20px; margin-bottom: 6px;
+  }
+  .section-head .meta {
+    font-size: 0.7rem; color: #6B7280;
+    font-family: 'Outfit';
+  }
+  .today-sum { font-size: 1.15rem; font-weight: 500; color: #000; margin-bottom: 4px; }
+
+  /* 항목 (체크박스 + 텍스트) */
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    font-size: 0.82rem;
+  }
+  .check {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid #60A5FA;
+    flex-shrink: 0;
+  }
+  .check.done { background: #60A5FA; border: none; display: flex; align-items: center; justify-content: center; }
+  .check.done::after { content: "✓"; color: #fff; font-size: 0.7rem; }
+  .item.done .text { color: #6B7280; text-decoration: line-through; }
+  .item .text { flex: 1; }
+  .item .x { color: #D1D5DB; font-size: 0.8rem; cursor: pointer; padding: 0 4px; }
+
+  /* Routine 입력창 */
+  .input-row {
+    display: flex; gap: 8px; align-items: flex-start;
+    margin-top: 8px; margin-bottom: 8px;
+  }
+  .input-row textarea {
+    flex: 1;
+    background: #f8f8f8;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: #6B7280;
+    font-family: inherit;
+    resize: none;
+    line-height: 1.5;
+    min-height: 50px;
+  }
+  .input-row button {
+    background: transparent;
+    border: 1px solid #60A5FA;
+    color: #60A5FA;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* TAG chip */
+  .chip {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin: 0 1px;
+  }
+  .chip-paper { background: rgba(94,153,114,0.18); color: #5E9972; }
+  .chip-exercise { background: rgba(126,107,168,0.18); color: #7E6BA8; }
+  .chip-write { background: rgba(90,134,176,0.18); color: #5A86B0; }
+  .chip-research { background: rgba(168,114,138,0.18); color: #A8728A; }
+  .chip-meeting { background: rgba(160,124,80,0.18); color: #A07C50; }
+  .chip-health { background: rgba(154,138,85,0.18); color: #9A8A55; }
+
+  /* Activity tracker */
+  .tracker {
+    background: linear-gradient(180deg, #fafafa, #f5f5f5);
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 24px;
+    margin-bottom: 18px;
+  }
+  .tracker-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .tracker-title {
+    font-family: 'Outfit';
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .tracker-period { font-size: 0.65rem; color: #9CA3AF; font-family: 'Outfit'; }
+
+  .tracker-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0; font-size: 0.8rem;
+  }
+  .tag-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    min-width: 78px;
+  }
+  .dots { display: flex; gap: 3px; flex: 1; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #E5E7EB;
+  }
+  .dot.on { opacity: 0.85; }
+  .source-info {
+    display: flex; flex-direction: column; align-items: flex-end;
+    width: 60px; flex-shrink: 0;
+  }
+  .source-info .days { font-size: 0.7rem; color: #6B7280; font-weight: 500; }
+  .source-info .src { font-size: 0.58rem; color: #9CA3AF; }
+
+  /* Completed Week */
+  .completed-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; margin-top: 18px;
+  }
+  .week-nav-title { text-align: center; font-size: 0.84rem; font-weight: 600; color: #333; margin-bottom: 2px; }
+  .week-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-bottom: 12px;
+  }
+  .week-nav button {
+    background: none; border: none;
+    font-size: 1.1rem; color: #6B7280;
+    cursor: pointer; padding: 4px 8px;
+  }
+  .week-nav button.disabled { color: #D1D5DB; cursor: not-allowed; }
+  .week-nav .label { font-size: 0.78rem; color: #6B7280; }
+
+  .day-group { margin-bottom: 12px; }
+  .day-head {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6B7280;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ececec;
+    margin-bottom: 6px;
+  }
+  .completed-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 3px 0 3px 8px;
+    border-left: 2px solid #d1fae5;
+    margin-bottom: 2px;
+  }
+  .completed-item .ico { color: #5E9972; font-size: 0.78rem; }
+  .completed-item .text {
+    font-size: 0.82rem; color: #6B7280;
+    line-height: 1.5; text-decoration: line-through;
+    flex: 1;
+  }
+
+  /* Upcoming */
+  .upcoming-toggle {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; padding: 4px 0;
+    margin-top: 24px;
+  }
+  .upcoming-toggle .lbl {
+    font-family: 'Outfit'; font-size: 0.7rem; font-weight: 500;
+    color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .upcoming-toggle .arrow { font-size: 0.7rem; color: #6B7280; }
+
+  /* TODO 섹션 입력 */
+  .todo-input {
+    display: flex; gap: 8px; align-items: flex-start;
+    margin-top: 4px; margin-bottom: 16px;
+  }
+  .todo-input textarea {
+    flex: 1;
+    background: #f8f8f8;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #6B7280;
+    font-family: inherit;
+    resize: none;
+    line-height: 1.5;
+    min-height: 56px;
+  }
+  .todo-input button {
+    background: transparent;
+    border: 1px solid #60A5FA;
+    color: #60A5FA;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .todo-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 4px 0;
+  }
+  .todo-item .check { margin-top: 3px; }
+  .todo-item .text { font-size: 0.84rem; color: #333; flex: 1; line-height: 1.6; }
+  .todo-item .ts { display: block; font-size: 0.62rem; color: #9CA3AF; margin-top: 1px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="page-title">홈 전체 통합 시안 — v0.9.5</div>
+<div class="page-sub">최근 추가/변경된 영역(녹·주황 박스)을 포함한 전체 홈 흐름</div>
+
+<div class="layout">
+
+  <!-- 좌측 주석 패널 -->
+  <div class="annotations">
+    <div class="anno-title">📋 섹션 가이드</div>
+
+    <div class="anno-item">
+      <div class="anno-num">1</div>
+      <div>
+        <div class="anno-name">WeatherHero</div>
+        <div class="anno-desc">날씨 + 시간 + 시간대 컬러</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num">2</div>
+      <div>
+        <div class="anno-name">Greeting + DailyInsight</div>
+        <div class="anno-desc">맞춤 첫 인사 + 몸·마음 컨디션 칩</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num">3</div>
+      <div>
+        <div class="anno-name">Today 스케줄</div>
+        <div class="anno-desc">체크 가능 · ✕ 삭제</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num changed">4</div>
+      <div>
+        <div class="anno-name">Routine <span class="anno-tag changed">+ 입력창</span></div>
+        <div class="anno-desc">2줄 textarea · #태그 자동 칩화 · Shift+Enter 줄바꿈</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num">5</div>
+      <div>
+        <div class="anno-name">Upcoming (접힘)</div>
+        <div class="anno-desc">내일/모레/어제 일정</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num">6</div>
+      <div>
+        <div class="anno-name">Recommendation</div>
+        <div class="anno-desc">AI 동적 제안</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num changed">7</div>
+      <div>
+        <div class="anno-name">TODO <span class="anno-tag changed">2줄 입력</span></div>
+        <div class="anno-desc">#태그 자동 칩화 · 시간 표시</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num new">8</div>
+      <div>
+        <div class="anno-name">📈 ACTIVITY <span class="anno-tag new">신규</span></div>
+        <div class="anno-desc">5개 소스에서 #태그 자동 집계 (Thesis · Work · Todo · 하루 · Routine), 최근 7일 도트</div>
+      </div>
+    </div>
+
+    <div class="anno-item">
+      <div class="anno-num new">9</div>
+      <div>
+        <div class="anno-name">✓ COMPLETED <span class="anno-tag new">신규</span></div>
+        <div class="anno-desc">완료된 todo 주차별 보기 (← → 네비 · Week 탭과 동일 패턴), 날짜별 그룹</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 핸드폰 프레임 -->
+  <div class="phone">
+    <div class="screen">
+
+      <!-- 1. Hero -->
+      <div class="marker" style="margin-top: 4px;">
+        <div class="marker-num">1</div>
+        <div class="hero">
+          <div class="hero-row">
+            <div>
+              <div class="hero-temp">19°</div>
+              <div class="hero-cond">맑음</div>
+              <div class="hero-range">17 / 23°</div>
+            </div>
+            <div class="hero-time">SUN<br>MAY 25</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Greeting + Insight -->
+      <div class="marker">
+        <div class="marker-num">2</div>
+        <div class="date">SUN, MAY 25</div>
+        <div class="greeting">Good Afternoon</div>
+        <div class="greet-sub">진 집사가 준비한 오후 브리핑입니다</div>
+        <div class="insight">
+          <span class="insight-pill">구름 조금 22°</span>
+          <span class="insight-pill accent">몸 수면 6.5h, 컨디션 4/5</span>
+          <span class="insight-pill accent">마음 평온</span>
+        </div>
+        <div class="recommend-box">
+          오늘 일정 3건. 컨디션은 평소 수준이니 점심 후 짧은 산책을 권합니다.
+        </div>
+      </div>
+
+      <!-- 3. Today -->
+      <div class="marker">
+        <div class="marker-num">3</div>
+        <div class="section-label">Today</div>
+        <div class="today-sum">일요일 — 3건</div>
+        <div class="item">
+          <div class="check"></div>
+          <div class="text">10:00 학회 발표 준비</div>
+          <div class="x">✕</div>
+        </div>
+        <div class="item done">
+          <div class="check done"></div>
+          <div class="text">14:00 인터뷰 준비 미팅</div>
+          <div class="x">✕</div>
+        </div>
+        <div class="item">
+          <div class="check"></div>
+          <div class="text">18:00 운동</div>
+          <div class="x">✕</div>
+        </div>
+      </div>
+
+      <!-- 4. Routine + 입력창 -->
+      <div class="marker highlight-changed">
+        <div class="marker-num changed">4</div>
+        <div class="section-head">
+          <div class="section-label" style="margin: 0;">Routine</div>
+          <span class="meta">2/4 🔥</span>
+        </div>
+        <div class="input-row">
+          <textarea placeholder="루틴 추가 (예: 아침 스트레칭 #운동, Shift+Enter 줄바꿈)"></textarea>
+          <button>추가</button>
+        </div>
+        <div class="item done">
+          <div class="check done"></div>
+          <div class="text">아침 스트레칭 <span class="chip chip-exercise">#운동</span></div>
+          <span class="meta">5일째</span>
+        </div>
+        <div class="item done">
+          <div class="check done"></div>
+          <div class="text">물 3잔 <span class="chip chip-health">#건강</span></div>
+          <span class="meta">3일째</span>
+        </div>
+        <div class="item">
+          <div class="check"></div>
+          <div class="text">저녁 명상 10분 <span class="chip chip-research">#마음</span></div>
+          <span class="meta"></span>
+        </div>
+        <div class="item">
+          <div class="check"></div>
+          <div class="text">독서 20분 <span class="chip chip-paper">#독서</span></div>
+        </div>
+      </div>
+
+      <!-- 5. Upcoming -->
+      <div class="marker">
+        <div class="marker-num">5</div>
+        <div class="upcoming-toggle">
+          <div class="lbl">Tomorrow / Upcoming</div>
+          <div class="arrow">▼</div>
+        </div>
+      </div>
+
+      <!-- 6. Recommendation -->
+      <div class="marker">
+        <div class="marker-num">6</div>
+        <div class="section-label">Recommendation</div>
+        <div style="font-size: 0.82rem; color: #6B7280; padding: 6px 0; line-height: 1.5;">
+          오늘은 일정이 많아요. 점심 시간 짧은 명상 5분 어떠세요?
+        </div>
+      </div>
+
+      <!-- 7. Todo + 입력 -->
+      <div class="marker highlight-changed">
+        <div class="marker-num changed">7</div>
+        <div class="section-label">Todo</div>
+        <div class="todo-input">
+          <textarea placeholder="할 일 추가... (#태그 가능, Shift+Enter 줄바꿈)"></textarea>
+          <button>추가</button>
+        </div>
+        <div class="todo-item">
+          <div class="check"></div>
+          <div class="text">
+            논문 3장 정리 <span class="chip chip-paper">#논문읽기</span>
+            <span class="ts">5/24 14:09</span>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="todo-item">
+          <div class="check"></div>
+          <div class="text">
+            Rise 사업계획서 수정 <span class="chip chip-write">#글쓰기</span>
+            <span class="ts">5/24 09:30</span>
+          </div>
+          <div class="x">✕</div>
+        </div>
+      </div>
+
+      <!-- 8. Activity Tracker -->
+      <div class="marker highlight-new">
+        <div class="marker-num new">8</div>
+        <div class="tracker">
+          <div class="tracker-head">
+            <div class="tracker-title">📈 Activity</div>
+            <div class="tracker-period">최근 7일</div>
+          </div>
+          <div class="tracker-row">
+            <span class="tag-label chip-paper">#논문읽기</span>
+            <div class="dots">
+              <div class="dot on" style="background:#5E9972;"></div>
+              <div class="dot on" style="background:#5E9972;"></div>
+              <div class="dot on" style="background:#5E9972;"></div>
+              <div class="dot"></div>
+              <div class="dot on" style="background:#5E9972;"></div>
+              <div class="dot on" style="background:#5E9972;"></div>
+              <div class="dot on" style="background:#5E9972;"></div>
+            </div>
+            <div class="source-info"><span class="days">6일</span><span class="src">thesis·todo</span></div>
+          </div>
+          <div class="tracker-row">
+            <span class="tag-label chip-exercise">#운동</span>
+            <div class="dots">
+              <div class="dot on" style="background:#7E6BA8;"></div>
+              <div class="dot on" style="background:#7E6BA8;"></div>
+              <div class="dot on" style="background:#7E6BA8;"></div>
+              <div class="dot on" style="background:#7E6BA8;"></div>
+              <div class="dot on" style="background:#7E6BA8;"></div>
+              <div class="dot"></div>
+              <div class="dot on" style="background:#7E6BA8;"></div>
+            </div>
+            <div class="source-info"><span class="days">6일</span><span class="src">routine</span></div>
+          </div>
+          <div class="tracker-row">
+            <span class="tag-label chip-write">#글쓰기</span>
+            <div class="dots">
+              <div class="dot on" style="background:#5A86B0;"></div>
+              <div class="dot on" style="background:#5A86B0;"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot on" style="background:#5A86B0;"></div>
+              <div class="dot on" style="background:#5A86B0;"></div>
+              <div class="dot"></div>
+            </div>
+            <div class="source-info"><span class="days">4일</span><span class="src">work·todo</span></div>
+          </div>
+          <div class="tracker-row">
+            <span class="tag-label chip-research">#연구계보</span>
+            <div class="dots">
+              <div class="dot on" style="background:#A8728A;"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot on" style="background:#A8728A;"></div>
+              <div class="dot"></div>
+              <div class="dot on" style="background:#A8728A;"></div>
+            </div>
+            <div class="source-info"><span class="days">3일</span><span class="src">thesis</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Completed This Week -->
+      <div class="marker highlight-new">
+        <div class="marker-num new">9</div>
+        <div class="completed-head">
+          <div class="tracker-title">✓ Completed</div>
+          <span class="meta">8건</span>
+        </div>
+        <div class="week-nav-title">5월 4번째 주</div>
+        <div class="week-nav">
+          <button>←</button>
+          <span class="label">5/24 ~ 5/30</span>
+          <button class="disabled">→</button>
+        </div>
+
+        <div class="day-group">
+          <div class="day-head">오늘 (일) · 2건</div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">논문 3장 정리 <span class="chip chip-paper">#논문읽기</span></span>
+          </div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">메일 답장</span>
+          </div>
+        </div>
+
+        <div class="day-group">
+          <div class="day-head">어제 (토) · 3건</div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">아침 운동 30분 <span class="chip chip-exercise">#운동</span></span>
+          </div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">Rise 보고서 1차 초안 <span class="chip chip-write">#글쓰기</span></span>
+          </div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">063 대시보드 토큰 정리 <span class="chip chip-write">#글쓰기</span></span>
+          </div>
+        </div>
+
+        <div class="day-group">
+          <div class="day-head">5/22 (목) · 3건</div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">DSAPG 회의록 <span class="chip chip-meeting">#회의</span></span>
+          </div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">푸코 『말과 사물』 4장 <span class="chip chip-paper">#논문읽기</span></span>
+          </div>
+          <div class="completed-item">
+            <span class="ico">✓</span>
+            <span class="text">강의 슬라이드 보강</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 메뉴바 -->
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <span class="ico">🏠</span>
+          홈
+        </div>
+        <div class="nav-item">
+          <span class="ico">📝</span>
+          기록
+        </div>
+        <div class="nav-item">
+          <span class="ico">🌙</span>
+          하루
+        </div>
+        <div class="nav-item">
+          <span class="ico">⚙️</span>
+          설정
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+</body>
+</html>

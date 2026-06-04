@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>체크박스 회색 농도 비교 (20% / 30% / 50%)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    padding: 40px 20px;
+    -webkit-font-smoothing: antialiased;
+    color: #111;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .title { font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .sub { text-align: center; font-size: 0.84rem; color: #6B7280; margin-bottom: 28px; }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1000px) { .row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #e6e6e6;
+  }
+  .card-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px dashed #ececec;
+    padding-bottom: 10px; margin-bottom: 14px;
+  }
+  .card-label {
+    font-family: 'Outfit'; font-size: 0.7rem; font-weight: 700;
+    color: #111; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .card-hex { font-family: 'Outfit'; font-size: 0.7rem; color: #9CA3AF; }
+
+  .sx-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .sx-title {
+    font-family: 'Outfit'; font-size: 0.7rem; font-weight: 600;
+    color: #111;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .sx-meta { font-size: 0.66rem; color: #9CA3AF; font-family: 'Outfit'; }
+  .today-sum { font-size: 1.05rem; font-weight: 500; color: #111; margin-bottom: 4px; }
+
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0; font-size: 0.84rem;
+  }
+  .check-circle {
+    width: 16px; height: 16px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .check-circle.empty {
+    background: transparent;
+  }
+  .check-circle.on {
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-circle.on::after {
+    content: "✓"; color: #fff; font-size: 0.7rem;
+  }
+  .item.done .text { color: #9CA3AF; text-decoration: line-through; }
+  .item .text { flex: 1; color: #111; }
+
+  /* 농도별 변형 */
+  .g20 .check-circle.empty { border: 1.5px solid rgba(0,0,0,0.2); }
+  .g20 .check-circle.on { background: rgba(0,0,0,0.2); }
+
+  .g30 .check-circle.empty { border: 1.5px solid rgba(0,0,0,0.3); }
+  .g30 .check-circle.on { background: rgba(0,0,0,0.3); }
+
+  .g40 .check-circle.empty { border: 1.5px solid rgba(0,0,0,0.4); }
+  .g40 .check-circle.on { background: rgba(0,0,0,0.4); }
+
+  .g50 .check-circle.empty { border: 1.5px solid rgba(0,0,0,0.5); }
+  .g50 .check-circle.on { background: rgba(0,0,0,0.5); }
+
+  .swatch-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px dashed #ececec;
+  }
+  .swatch-row .lbl { font-family: 'Outfit'; font-size: 0.66rem; color: #6B7280; text-transform: uppercase; letter-spacing: 0.08em; }
+  .swatch {
+    width: 22px; height: 22px; border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="title">체크박스 회색 농도 — Today 섹션 비교</div>
+<div class="sub">동일한 Today 섹션에서 체크 원의 회색 농도만 다르게 (20% / 30% / 50%)</div>
+
+<div class="row">
+
+  <!-- 20% -->
+  <div class="card g20">
+    <div class="card-head">
+      <div class="card-label">20% 회색</div>
+      <div class="card-hex">rgba(0,0,0,0.20) · #CCCCCC</div>
+    </div>
+
+    <div class="sx-head">
+      <div class="sx-title">Today</div>
+      <div class="sx-meta">3건 · 1/3 완료</div>
+    </div>
+    <div class="today-sum">일요일</div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">10:00 학회 발표</div></div>
+    <div class="item done"><div class="check-circle on"></div><div class="text">14:00 인터뷰 미팅</div></div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">18:00 운동</div></div>
+
+    <div class="swatch-row">
+      <span class="lbl">checked</span>
+      <div class="swatch" style="background: rgba(0,0,0,0.20); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem;">✓</div>
+      <span class="lbl" style="margin-left: 10px;">empty</span>
+      <div class="swatch" style="border: 1.5px solid rgba(0,0,0,0.20);"></div>
+    </div>
+  </div>
+
+  <!-- 30% -->
+  <div class="card g30">
+    <div class="card-head">
+      <div class="card-label">30% 회색</div>
+      <div class="card-hex">rgba(0,0,0,0.30) · #B3B3B3</div>
+    </div>
+
+    <div class="sx-head">
+      <div class="sx-title">Today</div>
+      <div class="sx-meta">3건 · 1/3 완료</div>
+    </div>
+    <div class="today-sum">일요일</div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">10:00 학회 발표</div></div>
+    <div class="item done"><div class="check-circle on"></div><div class="text">14:00 인터뷰 미팅</div></div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">18:00 운동</div></div>
+
+    <div class="swatch-row">
+      <span class="lbl">checked</span>
+      <div class="swatch" style="background: rgba(0,0,0,0.30); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem;">✓</div>
+      <span class="lbl" style="margin-left: 10px;">empty</span>
+      <div class="swatch" style="border: 1.5px solid rgba(0,0,0,0.30);"></div>
+    </div>
+  </div>
+
+  <!-- 40% -->
+  <div class="card g40">
+    <div class="card-head">
+      <div class="card-label">40% 회색</div>
+      <div class="card-hex">rgba(0,0,0,0.40) · #999999</div>
+    </div>
+
+    <div class="sx-head">
+      <div class="sx-title">Today</div>
+      <div class="sx-meta">3건 · 1/3 완료</div>
+    </div>
+    <div class="today-sum">일요일</div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">10:00 학회 발표</div></div>
+    <div class="item done"><div class="check-circle on"></div><div class="text">14:00 인터뷰 미팅</div></div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">18:00 운동</div></div>
+
+    <div class="swatch-row">
+      <span class="lbl">checked</span>
+      <div class="swatch" style="background: rgba(0,0,0,0.40); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem;">✓</div>
+      <span class="lbl" style="margin-left: 10px;">empty</span>
+      <div class="swatch" style="border: 1.5px solid rgba(0,0,0,0.40);"></div>
+    </div>
+  </div>
+
+  <!-- 50% -->
+  <div class="card g50">
+    <div class="card-head">
+      <div class="card-label">50% 회색</div>
+      <div class="card-hex">rgba(0,0,0,0.50) · #808080</div>
+    </div>
+
+    <div class="sx-head">
+      <div class="sx-title">Today</div>
+      <div class="sx-meta">3건 · 1/3 완료</div>
+    </div>
+    <div class="today-sum">일요일</div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">10:00 학회 발표</div></div>
+    <div class="item done"><div class="check-circle on"></div><div class="text">14:00 인터뷰 미팅</div></div>
+    <div class="item"><div class="check-circle empty"></div><div class="text">18:00 운동</div></div>
+
+    <div class="swatch-row">
+      <span class="lbl">checked</span>
+      <div class="swatch" style="background: rgba(0,0,0,0.50); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem;">✓</div>
+      <span class="lbl" style="margin-left: 10px;">empty</span>
+      <div class="swatch" style="border: 1.5px solid rgba(0,0,0,0.50);"></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width: 720px; margin: 24px auto 0; padding: 14px 20px; background: #fff; border: 1px solid #e6e6e6; border-radius: 10px; font-size: 0.82rem; line-height: 1.6; color: #4B5563;">
+  <b>관찰 포인트</b>
+  <ul style="margin-top: 6px; padding-left: 20px;">
+    <li><b>20%</b>: 매우 부드러움. 체크 표시(✓ 흰색)가 살짝 묻혀 보일 수 있음</li>
+    <li><b>30%</b>: 부드러우면서 ✓ 어느 정도 명확</li>
+    <li><b>40%</b> ⭐: 균형점. ✓ 또렷, 너무 무겁지 않음</li>
+    <li><b>50%</b>: 또렷함. 검정에 더 가까워서 강조 효과</li>
+  </ul>
+  <p style="margin-top: 8px;">어느 농도가 마음에 드시는지 알려주시면 적용하겠습니다.</p>
+</div>
+
+</div>
+</body>
+</html>

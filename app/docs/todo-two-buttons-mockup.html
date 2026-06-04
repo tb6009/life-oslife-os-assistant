@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — Todo 두 버튼 시안 3안 (2026-05-30)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5; padding: 28px 20px 60px; color: #111;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1500px; margin: 0 auto; }
+  .page-title { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .page-sub { text-align: center; font-size: 0.84rem; color: #6B7280; margin-bottom: 28px; max-width: 760px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+  .phones-row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .phone-wrap { width: 100%; max-width: 380px; }
+  .phone-label { text-align: center; font-family: 'Outfit'; font-size: 0.72rem; color: #111; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 700; }
+  .phone-title { text-align: center; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .phone-sub { text-align: center; font-size: 0.74rem; color: #9CA3AF; margin-bottom: 16px; line-height: 1.5; padding: 0 8px; }
+
+  .phone { background: #000; border-radius: 40px; padding: 8px; }
+  .screen { background: #fff; border-radius: 32px; padding: 22px 22px 30px; min-height: 720px; }
+
+  /* 섹션 라벨 */
+  .label {
+    font-family: 'Outfit'; font-size: 0.7rem; font-weight: 600;
+    color: #111; text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 18px; margin-bottom: 10px;
+  }
+  .label:first-child { margin-top: 0; }
+  .label-muted { color: #6B7280; font-weight: 500; }
+
+  /* 공통 Todo row */
+  .todo-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; min-height: 36px; }
+  .todo-circle { margin-top: 3px; width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #2563eb; cursor: pointer; }
+  .todo-circle.filled { background: #2563eb; border-color: #2563eb; display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.6rem; }
+  .todo-text { flex: 1; font-size: 0.86rem; color: #111; line-height: 1.4; }
+  .todo-text.done { color: #9CA3AF; text-decoration: line-through; }
+  .todo-meta { font-size: 0.65rem; color: #9CA3AF; display: block; margin-top: 2px; text-decoration: none; }
+
+  /* A안: 두 버튼 */
+  .btn-pair { display: flex; gap: 4px; margin-top: 3px; flex-shrink: 0; }
+  .btn-prog {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid #9CA3AF; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #6B7280; font-size: 0.65rem;
+  }
+  .btn-prog:hover { border-color: #2563eb; color: #2563eb; }
+  .btn-prog.logged { border-color: #2563eb; background: #EFF6FF; color: #2563eb; }
+  .btn-done {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid #2563eb; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #2563eb; font-size: 0.65rem; font-weight: 700;
+  }
+  .progress-dots {
+    display: flex; gap: 3px; margin-top: 4px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #DBEAFE; }
+  .dot.filled { background: #2563eb; }
+  .progress-label { font-size: 0.62rem; color: #6B7280; margin-left: 6px; }
+
+  /* B안: 토글 */
+  .togglebar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-top: 6px; }
+  .toggle-btn {
+    font-size: 0.62rem; padding: 2px 7px; border-radius: 10px;
+    background: #f3f4f6; color: #6B7280; cursor: pointer;
+    border: 1px solid transparent; font-family: 'Outfit'; font-weight: 500;
+  }
+  .toggle-btn.active { background: #fbbf24; color: #111; border-color: #fbbf24; }
+
+  /* 루틴 영역 (B안) */
+  .routine-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .routine-circle {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid #2563eb; flex-shrink: 0;
+  }
+  .routine-circle.done { background: #2563eb; }
+  .routine-text { flex: 1; font-size: 0.86rem; }
+  .streak-pill { font-size: 0.68rem; color: #6B7280; }
+  .streak-pill.hot { color: #ef4444; font-weight: 600; }
+
+  /* C안: 라벨/색 분리 */
+  .c-btn-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; margin-left: 8px; flex-shrink: 0; }
+  .c-btn-row { display: flex; gap: 6px; align-items: center; }
+  .c-btn {
+    font-size: 0.6rem; font-family: 'Outfit'; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px; cursor: pointer;
+    border: 1px solid #e5e7eb; background: #fff; color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .c-btn:hover { border-color: #2563eb; color: #2563eb; }
+  .c-btn.today { color: #2563eb; border-color: #BFDBFE; background: #EFF6FF; }
+  .c-btn.done-c { color: #fff; border-color: #2563eb; background: #2563eb; }
+
+  /* 안 설명 박스 */
+  .explain-row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+  .explain-card { max-width: 380px; background: #fff; border-radius: 12px; padding: 20px; border-top: 4px solid #2563eb; }
+  .explain-card.b { border-top-color: #fbbf24; }
+  .explain-card.c { border-top-color: #6B7280; }
+  .explain-h { font-family: 'Outfit'; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6B7280; margin-bottom: 4px; }
+  .explain-t { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+  .explain-list { font-size: 0.82rem; line-height: 1.7; color: #333; }
+  .explain-list li { margin-bottom: 4px; padding-left: 14px; position: relative; }
+  .explain-list li::before { content: "·"; position: absolute; left: 4px; color: #9CA3AF; font-weight: 700; }
+  .explain-list .pos { color: #059669; }
+  .explain-list .neg { color: #DC2626; }
+  .explain-tag { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; margin-right: 4px; margin-top: 6px; font-family: 'Outfit'; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tag-db { background: #FEE2E2; color: #991B1B; }
+  .tag-nodb { background: #D1FAE5; color: #065F46; }
+  .tag-reuse { background: #DBEAFE; color: #1E40AF; }
+
+  /* 추천 박스 */
+  .reco-box {
+    max-width: 1180px; margin: 40px auto 0;
+    background: #111; color: #fff; border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .reco-h { font-family: 'Outfit'; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #60A5FA; margin-bottom: 6px; }
+  .reco-t { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+  .reco-body { font-size: 0.86rem; line-height: 1.7; color: #D1D5DB; }
+  .reco-body b { color: #fff; }
+
+  /* 비교 표 */
+  .compare-tbl {
+    max-width: 1180px; margin: 24px auto 0;
+    background: #fff; border-radius: 12px; padding: 24px 28px;
+    font-size: 0.84rem;
+  }
+  .compare-tbl table { width: 100%; border-collapse: collapse; }
+  .compare-tbl th, .compare-tbl td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  .compare-tbl th { font-family: 'Outfit'; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6B7280; font-weight: 600; }
+  .compare-tbl td:first-child { font-weight: 600; color: #111; width: 22%; }
+  .compare-tbl .cell-A { color: #2563eb; }
+  .compare-tbl .cell-B { color: #b45309; }
+  .compare-tbl .cell-C { color: #6B7280; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-title">Todo 두 버튼 시안 — 3안 비교</div>
+  <div class="page-sub">
+    피드백: "todo에는 '완전히 끝낸 것'과 '오늘 했다는 진행' 두 가지가 섞여 있다 — 버튼 두 개로 가능할까?"<br>
+    아래는 동일한 Todo 목록에 대해 세 가지 해석으로 만든 시안입니다 (2026-05-30).
+  </div>
+
+  <div class="phones-row">
+
+    <!-- ============== A안: 두 버튼 (진행 로그) ============== -->
+    <div class="phone-wrap">
+      <div class="phone-label" style="color:#2563eb;">A안 — 두 버튼</div>
+      <div class="phone-title">진행 로그 + 마무리</div>
+      <div class="phone-sub">투두에 "오늘 했다" 버튼 추가.<br>며칠 걸리는 일을 매일 기록.</div>
+
+      <div class="phone"><div class="screen">
+        <div class="label">Todo</div>
+
+        <!-- 1: 며칠짜리 작업, 오늘 진행 누름 -->
+        <div class="todo-row">
+          <div class="todo-text">
+            논문 챕터 3 초고
+            <span class="todo-meta">5/27 시작</span>
+            <div class="progress-dots">
+              <span class="dot filled"></span>
+              <span class="dot filled"></span>
+              <span class="dot filled"></span>
+              <span class="dot"></span>
+              <span class="progress-label">3일째 진행</span>
+            </div>
+          </div>
+          <div class="btn-pair">
+            <div class="btn-prog logged" title="오늘 진행">▶</div>
+            <div class="btn-done" title="마무리">✓</div>
+          </div>
+        </div>
+
+        <!-- 2: 오늘 새로 시작 -->
+        <div class="todo-row">
+          <div class="todo-text">
+            슈퍼노바 랜딩 카피
+            <span class="todo-meta">5/30 추가</span>
+          </div>
+          <div class="btn-pair">
+            <div class="btn-prog" title="오늘 진행">▶</div>
+            <div class="btn-done" title="마무리">✓</div>
+          </div>
+        </div>
+
+        <!-- 3: 단순 일회성 -->
+        <div class="todo-row">
+          <div class="todo-text">
+            정기 검진 예약
+            <span class="todo-meta">5/29 추가</span>
+          </div>
+          <div class="btn-pair">
+            <div class="btn-prog" title="오늘 진행">▶</div>
+            <div class="btn-done" title="마무리">✓</div>
+          </div>
+        </div>
+
+        <div class="label" style="margin-top:24px;">완료 (최근 7일)</div>
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text done">
+            연구비 정산 서류
+            <span class="todo-meta">5/22 → 5/28 · 6일 작업</span>
+          </div>
+        </div>
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text done">
+            세미나 슬라이드
+            <span class="todo-meta">5/29 · 당일</span>
+          </div>
+        </div>
+
+      </div></div>
+    </div>
+
+    <!-- ============== B안: 루틴 승격 토글 ============== -->
+    <div class="phone-wrap">
+      <div class="phone-label" style="color:#b45309;">B안 — 루틴 승격</div>
+      <div class="phone-title">여러 날 토글</div>
+      <div class="phone-sub">투두 옆 "며칠" 토글 → 켜면<br>루틴 영역으로 이동, 매일 체크.</div>
+
+      <div class="phone"><div class="screen">
+        <div class="label">Todo</div>
+
+        <!-- 1: 며칠 토글 OFF -->
+        <div class="todo-row">
+          <div class="todo-circle"></div>
+          <div class="todo-text">
+            슈퍼노바 랜딩 카피
+            <span class="todo-meta">5/30 추가</span>
+          </div>
+          <div class="togglebar">
+            <div class="toggle-btn">며칠</div>
+          </div>
+        </div>
+
+        <!-- 2: 며칠 토글 OFF -->
+        <div class="todo-row">
+          <div class="todo-circle"></div>
+          <div class="todo-text">
+            정기 검진 예약
+            <span class="todo-meta">5/29 추가</span>
+          </div>
+          <div class="togglebar">
+            <div class="toggle-btn">며칠</div>
+          </div>
+        </div>
+
+        <div class="label" style="margin-top:28px; color:#b45309;">Routine <span class="label-muted">· 며칠짜리 작업 포함</span></div>
+
+        <!-- 루틴으로 이동된 항목 -->
+        <div class="routine-row" style="background:#FEF3C7; padding:8px 10px; border-radius:8px; margin-bottom:4px;">
+          <div class="routine-circle done"></div>
+          <div class="routine-text">논문 챕터 3 초고 <span style="font-size:0.62rem; color:#b45309; background:#fff; padding:1px 5px; border-radius:3px; margin-left:4px;">다일 작업</span></div>
+          <div class="streak-pill hot">3일째 🔥</div>
+        </div>
+        <div class="routine-row">
+          <div class="routine-circle done"></div>
+          <div class="routine-text">아침 스트레칭</div>
+          <div class="streak-pill hot">12일째 🔥</div>
+        </div>
+        <div class="routine-row">
+          <div class="routine-circle"></div>
+          <div class="routine-text">물 2L</div>
+          <div class="streak-pill">5일째</div>
+        </div>
+
+        <div class="label" style="margin-top:24px;">완료 (최근 7일)</div>
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text done">세미나 슬라이드<span class="todo-meta">5/29 · 당일</span></div>
+        </div>
+
+      </div></div>
+    </div>
+
+    <!-- ============== C안: 라벨/색만 분리 ============== -->
+    <div class="phone-wrap">
+      <div class="phone-label" style="color:#6B7280;">C안 — 시각 분리만</div>
+      <div class="phone-title">두 라벨 버튼</div>
+      <div class="phone-sub">DB·로직 그대로. 같은 자리에<br>"오늘"·"완료" 라벨 버튼 2개.</div>
+
+      <div class="phone"><div class="screen">
+        <div class="label">Todo</div>
+
+        <div class="todo-row">
+          <div class="todo-text" style="padding-top:4px;">
+            논문 챕터 3 초고
+            <span class="todo-meta">5/27 시작 · 마지막 진행 어제</span>
+          </div>
+          <div class="c-btn-wrap">
+            <div class="c-btn-row">
+              <div class="c-btn today">오늘</div>
+              <div class="c-btn">완료</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="todo-row">
+          <div class="todo-text" style="padding-top:4px;">
+            슈퍼노바 랜딩 카피
+            <span class="todo-meta">5/30 추가</span>
+          </div>
+          <div class="c-btn-wrap">
+            <div class="c-btn-row">
+              <div class="c-btn">오늘</div>
+              <div class="c-btn">완료</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="todo-row">
+          <div class="todo-text" style="padding-top:4px;">
+            정기 검진 예약
+            <span class="todo-meta">5/29 추가</span>
+          </div>
+          <div class="c-btn-wrap">
+            <div class="c-btn-row">
+              <div class="c-btn">오늘</div>
+              <div class="c-btn">완료</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="label" style="margin-top:24px;">완료 (최근 7일)</div>
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text done">
+            연구비 정산 서류
+            <span class="todo-meta">5/22 → 5/28 · 6일 작업</span>
+          </div>
+        </div>
+        <div class="todo-row">
+          <div class="todo-circle filled">✓</div>
+          <div class="todo-text done">
+            세미나 슬라이드
+            <span class="todo-meta">5/29 · 당일</span>
+          </div>
+        </div>
+
+      </div></div>
+    </div>
+
+  </div>
+
+  <!-- 설명 카드 -->
+  <div class="explain-row">
+
+    <div class="explain-card">
+      <div class="explain-h" style="color:#2563eb;">A안 — 진행 로그 + 마무리</div>
+      <div class="explain-t">투두에 "오늘 했다" 추가</div>
+      <ul class="explain-list">
+        <li>▶ 버튼 = 오늘 진행 로그 (pending 유지)</li>
+        <li>✓ 버튼 = 마무리 (Done으로 이동)</li>
+        <li>점 표시로 "N일째 진행" 시각화</li>
+        <li>Done에 "6일 작업" 메타 자연 연결</li>
+        <li class="pos">의미가 가장 정확. 며칠짜리 작업과 일회성을 한 리스트에서 다 처리.</li>
+        <li class="neg">새 테이블(<code>todo_progress_logs</code>) 1개 필요.</li>
+      </ul>
+      <div>
+        <span class="explain-tag tag-db">DB 변경</span>
+        <span class="explain-tag tag-reuse">ActivityTracker 통합</span>
+      </div>
+    </div>
+
+    <div class="explain-card b">
+      <div class="explain-h" style="color:#b45309;">B안 — 루틴 승격</div>
+      <div class="explain-t">"며칠" 토글 → 루틴화</div>
+      <ul class="explain-list">
+        <li>다일 작업은 Routine 영역으로 이동</li>
+        <li>기존 RoutineList 그대로 재사용</li>
+        <li>"다일 작업" 배지로 진짜 루틴과 구분</li>
+        <li class="pos">DB 변경 없음. 기존 streak 로직 그대로.</li>
+        <li class="neg">의미 혼선: 루틴(매일 반복)과 다일 작업(끝 있음)이 한 칸에 섞임.</li>
+        <li class="neg">"끝"을 어떻게 표현할지 별도 설계 필요 (루틴은 원래 끝이 없음).</li>
+      </ul>
+      <div>
+        <span class="explain-tag tag-nodb">DB 변경 없음</span>
+        <span class="explain-tag tag-reuse">RoutineList 재사용</span>
+      </div>
+    </div>
+
+    <div class="explain-card c">
+      <div class="explain-h" style="color:#6B7280;">C안 — 시각 분리만</div>
+      <div class="explain-t">"오늘"·"완료" 라벨 버튼</div>
+      <ul class="explain-list">
+        <li>버튼 두 개 표시는 같음</li>
+        <li>"오늘" 누르면 마지막 진행일 메타만 갱신</li>
+        <li>"완료" 누르면 Done으로</li>
+        <li class="pos">가장 가벼움. 1시간 작업.</li>
+        <li class="neg">진행 이력 추적 X. "오늘" 눌러도 데이터 안 남음.</li>
+        <li class="neg">사실상 A안의 축소판 — 곧 "진행 며칠 됐는지 보고 싶다" 나옴.</li>
+      </ul>
+      <div>
+        <span class="explain-tag tag-nodb">DB 변경 없음</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 비교 표 -->
+  <div class="compare-tbl">
+    <table>
+      <tr><th></th><th class="cell-A">A — 진행 로그</th><th class="cell-B">B — 루틴 승격</th><th class="cell-C">C — 시각 분리</th></tr>
+      <tr><td>DB 변경</td><td class="cell-A">새 테이블 1개</td><td class="cell-B">없음</td><td class="cell-C">없음</td></tr>
+      <tr><td>UI 복잡도</td><td class="cell-A">중 (점 그래프)</td><td class="cell-B">중 (토글 + 루틴 영역)</td><td class="cell-C">소 (버튼만)</td></tr>
+      <tr><td>의미 명확성</td><td class="cell-A">높음</td><td class="cell-B">낮음 (개념 혼선)</td><td class="cell-C">중간</td></tr>
+      <tr><td>진행 이력 보존</td><td class="cell-A">완전</td><td class="cell-B">streak로 우회</td><td class="cell-C">없음 (마지막 날짜만)</td></tr>
+      <tr><td>ActivityTracker 연동</td><td class="cell-A">자동</td><td class="cell-B">루틴 로그로 우회</td><td class="cell-C">불가</td></tr>
+      <tr><td>예상 작업량</td><td class="cell-A">반나절</td><td class="cell-B">2~3시간</td><td class="cell-C">1시간</td></tr>
+    </table>
+  </div>
+
+  <!-- 추천 -->
+  <div class="reco-box">
+    <div class="reco-h">추천</div>
+    <div class="reco-t">A안 — 진행 로그 + 마무리</div>
+    <div class="reco-body">
+      세 안 중 사용자 피드백의 의도("끝낸 것과 오늘 했다는 진행")를 가장 정확히 반영함.
+      <b>며칠 걸리는 일회성 작업(논문·기획)</b>과 <b>매일 반복하는 루틴(스트레칭)</b>은 본질이 다르므로
+      한 영역에 섞는 B안은 장기적으로 의미 혼선.
+      C안은 같은 UI를 보여주지만 데이터가 안 남아 v0.9.7의 "소요일 메타"·"회고 picking" 가치와 연결되지 않음.<br><br>
+      A안은 새 테이블 1개라는 비용이 있지만, <b>이미 운영 중인 ActivityTracker / Done 소요일 메타와 자연스럽게 통합</b>되어
+      Life OS 전체의 "활동 누적 → 회고" 흐름을 강화함.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

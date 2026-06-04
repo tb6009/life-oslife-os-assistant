@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Activity Tracker — 4가지 입력 UX 시안 (Option C)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    padding: 28px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+    color: #333;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center;
+    font-size: 0.84rem;
+    color: #6B7280;
+    margin-bottom: 28px;
+  }
+
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 920px) { .flow-grid { grid-template-columns: 1fr; } }
+
+  .flow-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    border: 1px solid #e6e6e6;
+  }
+  .flow-num {
+    display: inline-block;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Outfit';
+    font-weight: 700;
+    text-align: center;
+    line-height: 28px;
+    font-size: 0.9rem;
+    margin-right: 8px;
+  }
+  .flow-num.n1 { background: #5E9972; }
+  .flow-num.n2 { background: #5A86B0; }
+  .flow-num.n3 { background: #9A8A55; }
+  .flow-num.n4 { background: #7E6BA8; }
+
+  .flow-head {
+    display: flex; align-items: center;
+    margin-bottom: 4px;
+  }
+  .flow-title { font-size: 1rem; font-weight: 700; }
+  .flow-where {
+    font-size: 0.72rem; color: #9CA3AF;
+    margin-left: auto;
+    font-family: 'Outfit'; text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .flow-desc {
+    font-size: 0.78rem;
+    color: #6B7280;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .step {
+    margin-bottom: 14px;
+  }
+  .step-label {
+    font-family: 'Outfit';
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  /* 입력창 모형 */
+  .input-mock {
+    background: #f8f8f8;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    color: #333;
+    line-height: 1.5;
+    position: relative;
+  }
+  .input-mock.textarea { min-height: 64px; white-space: pre-wrap; }
+  .caret {
+    display: inline-block;
+    width: 1.5px;
+    height: 14px;
+    background: #60A5FA;
+    vertical-align: text-bottom;
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 드롭다운 모형 */
+  .dropdown {
+    margin-top: 4px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+    max-width: 220px;
+  }
+  .dropdown-item {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dropdown-item.active { background: #eff6ff; }
+  .dropdown-item:hover { background: #f3f4f6; }
+  .dropdown-item .freq {
+    margin-left: auto;
+    font-size: 0.65rem;
+    color: #9CA3AF;
+    font-family: 'Outfit';
+  }
+
+  /* 인라인 칩 (저장 후 표시) */
+  .saved-result {
+    background: #f0fdf4;
+    border: 1px solid #d1fae5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  .saved-result.todo { background: #fffbeb; border-color: #fef3c7; }
+  .saved-result.work { background: #eff6ff; border-color: #dbeafe; }
+  .saved-result.routine { background: #f5f3ff; border-color: #ede9fe; }
+
+  .inline-chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin: 0 1px;
+  }
+  .chip-paper { background: rgba(94,153,114,0.18); color: #5E9972; }
+  .chip-writing { background: rgba(90,134,176,0.18); color: #5A86B0; }
+  .chip-reading { background: rgba(154,138,85,0.18); color: #9A8A55; }
+  .chip-exercise { background: rgba(126,107,168,0.18); color: #7E6BA8; }
+  .chip-meeting { background: rgba(160,124,80,0.18); color: #A07C50; }
+
+  /* 화살표 */
+  .arrow {
+    text-align: center;
+    color: #9CA3AF;
+    font-size: 1rem;
+    margin: 4px 0;
+  }
+
+  /* 옵션 카드 (루틴용 ⓐ/ⓑ) */
+  .opt-row {
+    display: flex; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .opt-pill {
+    flex: 1;
+    background: #f8f8f8;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.74rem;
+    color: #6B7280;
+  }
+  .opt-pill.selected {
+    background: #f5f3ff;
+    border-color: #c4b5fd;
+    color: #6D28D9;
+  }
+  .opt-pill b { color: #333; display: block; margin-bottom: 3px; font-size: 0.8rem; font-weight: 700; }
+
+  /* 루틴 설정 화면 모형 */
+  .routine-config {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .routine-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    font-size: 0.82rem;
+  }
+  .routine-name { flex: 1; font-weight: 500; }
+  .tag-input-mini {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    color: #5E9972;
+  }
+
+  /* 체크박스 모형 */
+  .checkbox-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    font-size: 0.84rem;
+  }
+  .checkbox {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid #7E6BA8;
+    background: #7E6BA8;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 0.7rem;
+  }
+  .checkbox.empty { background: #fff; color: transparent; }
+
+  /* 데이터 흐름 다이어그램 */
+  .data-flow {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .data-flow h3 {
+    font-size: 1rem;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .flow-diagram {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr 60px 1fr;
+    align-items: center;
+    gap: 8px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .flow-box {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.78rem;
+  }
+  .flow-box .title { font-weight: 600; margin-bottom: 6px; }
+  .flow-box .small { font-size: 0.7rem; color: #6B7280; line-height: 1.5; }
+  .flow-arrow { text-align: center; color: #9CA3AF; font-size: 1.4rem; }
+
+  .sources-stack { display: flex; flex-direction: column; gap: 6px; }
+  .src-pill {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.72rem;
+    display: flex; justify-content: space-between;
+  }
+  .src-pill .src-name { font-weight: 600; }
+  .src-pill .src-note { color: #9CA3AF; font-size: 0.66rem; }
+
+  /* 핵심 결정 박스 */
+  .decision-box {
+    background: #fff8e1;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 32px;
+    font-size: 0.84rem;
+    line-height: 1.65;
+    color: #5C4A1F;
+  }
+  .decision-box h3 {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    color: #4A3815;
+  }
+  .decision-box ul { margin-top: 4px; padding-left: 18px; }
+  .decision-box li { margin-bottom: 2px; }
+  .q { color: #B45309; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="page-title">Activity Tracker — 4가지 입력 UX (Option C)</div>
+<div class="page-sub">Thesis · Work · Todo · Routine 각 입력 위치에서 #태그를 어떻게 처리하는지</div>
+
+<!-- ===== 입력 UI 4종 ===== -->
+<div class="flow-grid">
+
+  <!-- 1. Thesis -->
+  <div class="flow-card">
+    <div class="flow-head">
+      <span class="flow-num n1">1</span>
+      <div class="flow-title">Thesis</div>
+      <div class="flow-where">/diary → Thesis</div>
+    </div>
+    <div class="flow-desc">긴 textarea에 자유롭게 작성. 본문 어디든 <code>#태그</code> 가능 (여러 개 OK).</div>
+
+    <div class="step">
+      <div class="step-label">입력 중 — '#' 치면 드롭다운</div>
+      <div class="input-mock textarea">오늘 푸코 『말과 사물』 3장 30p 읽음. 에피스테메 개념 정리. #<span class="caret"></span></div>
+      <div class="dropdown">
+        <div class="dropdown-item active">📚 #논문읽기 <span class="freq">12회</span></div>
+        <div class="dropdown-item">🌳 #연구계보 <span class="freq">5회</span></div>
+        <div class="dropdown-item">✍️ #글쓰기 <span class="freq">3회</span></div>
+      </div>
+    </div>
+
+    <div class="arrow">↓ 저장</div>
+
+    <div class="step">
+      <div class="step-label">저장 후 카드에 자동 칩화</div>
+      <div class="saved-result">
+        오늘 푸코 『말과 사물』 3장 30p 읽음. 에피스테메 개념 정리. <span class="inline-chip chip-paper">#논문읽기</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Work -->
+  <div class="flow-card">
+    <div class="flow-head">
+      <span class="flow-num n2">2</span>
+      <div class="flow-title">Work</div>
+      <div class="flow-where">/diary → Work</div>
+    </div>
+    <div class="flow-desc">프로젝트 칩 + 한 줄 코멘트. 코멘트 안에 <code>#태그</code> 인라인 (Thesis와 동일).</div>
+
+    <div class="step">
+      <div class="step-label">프로젝트 칩 선택 후 코멘트 입력</div>
+      <div class="input-mock">
+        <span class="inline-chip" style="background: rgba(138,168,201,0.2); color: #5A86B0;">063 대시보드</span>
+        디자인 시안 정리 완료 #글<span class="caret"></span>
+      </div>
+      <div class="dropdown">
+        <div class="dropdown-item active">✍️ #글쓰기 <span class="freq">3회</span></div>
+      </div>
+    </div>
+
+    <div class="arrow">↓ 저장</div>
+
+    <div class="step">
+      <div class="step-label">저장 후 work 카드</div>
+      <div class="saved-result work">
+        디자인 시안 정리 완료 <span class="inline-chip chip-writing">#글쓰기</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Todo -->
+  <div class="flow-card">
+    <div class="flow-head">
+      <span class="flow-num n3">3</span>
+      <div class="flow-title">Todo</div>
+      <div class="flow-where">홈 → TodoList</div>
+    </div>
+    <div class="flow-desc">한 줄 input. <code>#태그</code> 인라인. 단, <b>완료 체크할 때만</b> 활동 카운트 (단순 추가만으론 안 잡힘).</div>
+
+    <div class="step">
+      <div class="step-label">Todo 추가</div>
+      <div class="input-mock">『코스모스』 5장 읽기 #독서</div>
+    </div>
+
+    <div class="arrow">↓ 표시</div>
+
+    <div class="step">
+      <div class="step-label">미완료 상태 — 활동 카운트 ✗</div>
+      <div class="saved-result todo">
+        ⚪ 『코스모스』 5장 읽기 <span class="inline-chip chip-reading">#독서</span>
+      </div>
+    </div>
+
+    <div class="arrow">↓ 체크</div>
+
+    <div class="step">
+      <div class="step-label">완료 시점 — 활동 카운트 ✓</div>
+      <div class="saved-result todo" style="opacity: 0.7;">
+        ✅ <s>『코스모스』 5장 읽기</s> <span class="inline-chip chip-reading">#독서</span>
+        <div style="font-size: 0.66rem; color: #9CA3AF; margin-top: 4px;">→ 오늘 #독서 +1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Routine -->
+  <div class="flow-card">
+    <div class="flow-head">
+      <span class="flow-num n4">4</span>
+      <div class="flow-title">Routine</div>
+      <div class="flow-where">홈 → RoutineList</div>
+    </div>
+    <div class="flow-desc">체크박스 UI → 텍스트 입력 없음. 두 가지 방식 중 선택.</div>
+
+    <div class="opt-row">
+      <div class="opt-pill selected">
+        <b>ⓐ 등록 시 태그 고정 (추천)</b>
+        루틴마다 미리 #태그 1개 지정. 체크하면 그 태그로 자동 카운트.
+      </div>
+      <div class="opt-pill">
+        <b>ⓑ 체크 후 메모 입력</b>
+        체크하면 펼침창 → 거기에 #태그 입력. 유연하지만 매번 작성.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-label">설정 — 루틴마다 태그 1개 (1회 등록)</div>
+      <div class="routine-config">
+        <div class="routine-item">
+          <span class="routine-name">아침 스트레칭 30분</span>
+          <span class="tag-input-mini" style="color: #7E6BA8;">#운동</span>
+        </div>
+        <div class="routine-item">
+          <span class="routine-name">저녁 산책 5km</span>
+          <span class="tag-input-mini" style="color: #7E6BA8;">#운동</span>
+        </div>
+        <div class="routine-item">
+          <span class="routine-name">아침 명상 10분</span>
+          <span class="tag-input-mini" style="color: #A8728A;">#마음</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">↓ 매일 체크</div>
+
+    <div class="step">
+      <div class="step-label">홈에서 체크 — 자동 카운트</div>
+      <div class="saved-result routine">
+        <div class="checkbox-row">
+          <div class="checkbox">✓</div>
+          <span>아침 스트레칭 30분</span>
+          <span class="inline-chip chip-exercise">#운동</span>
+        </div>
+        <div style="font-size: 0.66rem; color: #9CA3AF; margin-top: 0;">→ 오늘 #운동 +1</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== 데이터 흐름 ===== -->
+<div class="data-flow">
+  <h3>📊 데이터 흐름 — 4개 입력 → 1개 추적기</h3>
+  <div class="flow-diagram">
+
+    <div class="sources-stack">
+      <div class="src-pill"><span class="src-name">Thesis</span><span class="src-note">본문 inline</span></div>
+      <div class="src-pill"><span class="src-name">Work</span><span class="src-note">코멘트 inline</span></div>
+      <div class="src-pill"><span class="src-name">Todo</span><span class="src-note">완료 시점만</span></div>
+      <div class="src-pill"><span class="src-name">Routine</span><span class="src-note">사전 태그 + 체크</span></div>
+    </div>
+
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-box">
+      <div class="title">파싱 레이어</div>
+      <div class="small">정규식 <code>/#[\w가-힣]+/g</code> 으로<br>본문에서 태그 추출 + 루틴은 사전 매핑 사용</div>
+    </div>
+
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-box" style="background: #f0fdf4; border: 1px solid #d1fae5;">
+      <div class="title" style="color: #5E9972;">홈 활동 추적기</div>
+      <div class="small">태그별 일자 집계.<br>최근 7일 도트 + 카테고리 카드</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 결정 사항 ===== -->
+<div class="decision-box">
+  <h3>🤔 결정해주실 것</h3>
+  <ul>
+    <li><span class="q">Q1.</span> Todo는 "완료 시 카운트"가 맞나요? 아니면 "추가 시점부터 카운트"?
+      <ul>
+        <li>완료 시 → "실제 한 일"만 잡혀서 정확</li>
+        <li>추가 시 → "계획"까지 잡혀서 더 빨리 카운트 증가</li>
+      </ul>
+    </li>
+    <li><span class="q">Q2.</span> Routine은 ⓐ 사전 태그 vs ⓑ 매일 메모 — 어느 쪽?</li>
+    <li><span class="q">Q3.</span> 한 항목에 #태그 여러 개 허용? (예: <code>#논문읽기 #글쓰기</code>)</li>
+    <li><span class="q">Q4.</span> 태그 표시 색은 어떻게 정할까요?
+      <ul>
+        <li>자동 (태그명 해시 → 색)</li>
+        <li>수동 (설정에서 태그별 색 지정 가능)</li>
+        <li>혼합 (자동 기본값 + 수동 덮어쓰기)</li>
+      </ul>
+    </li>
+    <li><span class="q">Q5.</span> 추적기 위치 — 홈 상단(눈에 띄게) vs 중간(스케줄 다음) vs 하단(부담 덜)?</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

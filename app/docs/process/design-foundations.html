@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life OS — Design Foundations</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #f5f5f5; padding: 40px 20px; -webkit-font-smoothing: antialiased; color: #333; }
+  .container { max-width: 860px; margin: 0 auto; }
+  h1 { font-family: 'Outfit'; font-size: 2.2rem; font-weight: 700; color: #000; margin-bottom: 4px; }
+  .page-sub { font-size: 0.8rem; color: #808080; margin-bottom: 48px; }
+
+  .section { margin-bottom: 56px; }
+  .section-num { font-family: 'Outfit'; font-size: 0.6rem; font-weight: 500; color: #60A5FA; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px; }
+  .section-title { font-family: 'Outfit'; font-size: 1.3rem; font-weight: 700; color: #000; margin-bottom: 6px; }
+  .section-desc { font-size: 0.78rem; color: #808080; margin-bottom: 24px; line-height: 1.5; }
+
+  .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-family: 'Outfit'; font-size: 0.7rem; font-weight: 500; color: #b3b3b3; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+
+  /* Colors */
+  .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .color-swatch { text-align: center; }
+  .color-box { height: 48px; border-radius: 8px; margin-bottom: 4px; border: 1px solid rgba(0,0,0,0.06); }
+  .color-name { font-size: 0.6rem; color: #333; font-weight: 500; }
+  .color-hex { font-family: 'Outfit'; font-size: 0.55rem; color: #808080; }
+
+  .emotion-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .emotion-chip { padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; }
+
+  /* Typography */
+  .type-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
+  .type-label { font-family: 'Outfit'; font-size: 0.55rem; color: #b3b3b3; text-transform: uppercase; width: 60px; flex-shrink: 0; }
+  .type-spec { font-size: 0.6rem; color: #808080; margin-left: auto; flex-shrink: 0; text-align: right; }
+
+  /* Spacing */
+  .space-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .space-bar { background: #60A5FA; height: 12px; border-radius: 3px; }
+  .space-label { font-family: 'Outfit'; font-size: 0.6rem; color: #808080; width: 60px; flex-shrink: 0; }
+  .space-val { font-family: 'Outfit'; font-size: 0.55rem; color: #b3b3b3; }
+
+  /* Radius */
+  .radius-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .radius-item { width: 56px; height: 56px; background: #60A5FA; display: flex; align-items: center; justify-content: center; }
+  .radius-label { font-size: 0.5rem; color: #fff; font-weight: 500; }
+
+  /* Motion */
+  .motion-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .motion-bar { height: 4px; background: #60A5FA; border-radius: 2px; transition-property: width; }
+  .motion-name { font-family: 'Outfit'; font-size: 0.6rem; color: #333; width: 60px; }
+  .motion-val { font-family: 'Outfit'; font-size: 0.55rem; color: #b3b3b3; width: 50px; }
+
+  /* Touch */
+  .touch-grid { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .touch-box { display: flex; align-items: center; justify-content: center; border: 2px dashed #60A5FA; position: relative; }
+  .touch-label { font-size: 0.5rem; color: #60A5FA; text-align: center; }
+  .touch-inner { background: #333; border-radius: 50%; }
+
+  /* Chart */
+  .mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
+  .mini-bar { flex: 1; border-radius: 2px 2px 0 0; }
+
+  /* States */
+  .states-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .state-item { text-align: center; }
+  .state-circle { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 4px; display: flex; align-items: center; justify-content: center; }
+  .state-name { font-size: 0.55rem; color: #808080; }
+
+  /* Brand */
+  .personality-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .personality-label { font-size: 0.72rem; color: #333; width: 60px; }
+  .personality-track { flex: 1; height: 6px; background: #E6E6E6; border-radius: 3px; overflow: hidden; }
+  .personality-fill { height: 100%; background: #60A5FA; border-radius: 3px; }
+  .tone-tag { display: inline-block; font-size: 0.68rem; padding: 4px 12px; border-radius: 16px; margin: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Life OS Foundations</h1>
+<div class="page-sub">디자인 시스템의 뿌리 — 모든 화면은 이 위에 만들어집니다</div>
+
+<!-- ═══ 1. Brand ═══ -->
+<div class="section">
+  <div class="section-num">01 — Foundation</div>
+  <div class="section-title">Brand Identity</div>
+  <div class="section-desc">"나의 삶을 기록하고, 돌아보고, 더 나은 내일을 만든다"</div>
+
+  <div class="card">
+    <div class="card-title">Personality</div>
+    <div class="personality-bar"><span class="personality-label">차분한</span><div class="personality-track"><div class="personality-fill" style="width:80%"></div></div></div>
+    <div class="personality-bar"><span class="personality-label">따뜻한</span><div class="personality-track"><div class="personality-fill" style="width:70%"></div></div></div>
+    <div class="personality-bar"><span class="personality-label">실용적</span><div class="personality-track"><div class="personality-fill" style="width:90%"></div></div></div>
+    <div class="personality-bar"><span class="personality-label">미니멀</span><div class="personality-track"><div class="personality-fill" style="width:90%"></div></div></div>
+    <div class="personality-bar"><span class="personality-label">유머</span><div class="personality-track"><div class="personality-fill" style="width:30%"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tone</div>
+    <span class="tone-tag" style="background:#F0F9FF;color:#0C4A6E;">브리핑 — 차분하고 정돈된</span>
+    <span class="tone-tag" style="background:#FEF3C7;color:#92400E;">대화 — 따뜻하고 공감적</span>
+    <span class="tone-tag" style="background:#F0FDF4;color:#166534;">기록 — 객관적, 데이터 중심</span>
+    <span class="tone-tag" style="background:#FDF2F8;color:#9D174D;">격려 — 조용한 응원</span>
+  </div>
+</div>
+
+<!-- ═══ 2. Color ═══ -->
+<div class="section">
+  <div class="section-num">02 — Foundation</div>
+  <div class="section-title">Color System</div>
+  <div class="section-desc">Primitive → Semantic → Emotion 3계층 구조</div>
+
+  <div class="card">
+    <div class="card-title">Gray Scale</div>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="color-box" style="background:#FFFFFF;"></div><div class="color-name">White</div><div class="color-hex">#FFFFFF</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#FAFAFA;"></div><div class="color-name">Card</div><div class="color-hex">#FAFAFA</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#F8F8F8;"></div><div class="color-name">Input</div><div class="color-hex">#F8F8F8</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#F2F2F2;"></div><div class="color-name">Subtle</div><div class="color-hex">#F2F2F2</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#E6E6E6;"></div><div class="color-name">Border</div><div class="color-hex">#E6E6E6</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#B3B3B3;"></div><div class="color-name">Disabled</div><div class="color-hex">#B3B3B3</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#808080;"></div><div class="color-name">Secondary</div><div class="color-hex">#808080</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#333333;"></div><div class="color-name">Body</div><div class="color-hex">#333333</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#000000;"></div><div class="color-name">Primary</div><div class="color-hex">#000000</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Functional</div>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="color-box" style="background:#60A5FA;"></div><div class="color-name">Accent</div><div class="color-hex">#60A5FA</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#3B82F6;"></div><div class="color-name">Highlight</div><div class="color-hex">#3B82F6</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#059669;"></div><div class="color-name">Health</div><div class="color-hex">#059669</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#8B5CF6;"></div><div class="color-name">Emotion</div><div class="color-hex">#8B5CF6</div></div>
+      <div class="color-swatch"><div class="color-box" style="background:#DC2626;"></div><div class="color-name">Danger</div><div class="color-hex">#DC2626</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Emotion Colors</div>
+    <div class="emotion-grid">
+      <span class="emotion-chip" style="background:#FBBF2420;color:#FBBF24;border:1px solid #FBBF2440;">기쁨</span>
+      <span class="emotion-chip" style="background:#60A5FA20;color:#60A5FA;border:1px solid #60A5FA40;">평온</span>
+      <span class="emotion-chip" style="background:#F472B620;color:#F472B6;border:1px solid #F472B640;">설렘</span>
+      <span class="emotion-chip" style="background:#34D39920;color:#34D399;border:1px solid #34D39940;">감사</span>
+      <span class="emotion-chip" style="background:#94A3B820;color:#94A3B8;border:1px solid #94A3B840;">무기력</span>
+      <span class="emotion-chip" style="background:#A78BFA20;color:#A78BFA;border:1px solid #A78BFA40;">불안</span>
+      <span class="emotion-chip" style="background:#FB923C20;color:#FB923C;border:1px solid #FB923C40;">짜증</span>
+      <span class="emotion-chip" style="background:#818CF820;color:#818CF8;border:1px solid #818CF840;">슬픔</span>
+      <span class="emotion-chip" style="background:#CBD5E120;color:#94A3B8;border:1px solid #CBD5E140;">피곤</span>
+      <span class="emotion-chip" style="background:#C4B5FD20;color:#C4B5FD;border:1px solid #C4B5FD40;">외로움</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Chart Colors</div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+      <div style="width:40px;height:24px;background:#60A5FA;border-radius:4px;"></div>
+      <span style="font-size:0.72rem;color:#333;">달성 / 목표 이상</span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+      <div style="width:40px;height:24px;background:#E6E6E6;border-radius:4px;"></div>
+      <span style="font-size:0.72rem;color:#333;">미달성</span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div style="width:40px;height:24px;background:#F0F0F0;border-radius:4px;"></div>
+      <span style="font-size:0.72rem;color:#333;">데이터 없음</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 3. Typography ═══ -->
+<div class="section">
+  <div class="section-num">03 — Foundation</div>
+  <div class="section-title">Typography</div>
+  <div class="section-desc">Outfit (영문 제목) + Noto Sans KR (한글 본문)</div>
+
+  <div class="card">
+    <div class="card-title">Type Scale</div>
+    <div class="type-row">
+      <span class="type-label">display</span>
+      <span style="font-family:'Outfit';font-size:3.2rem;font-weight:300;color:#000;">18°</span>
+      <span class="type-spec">5.4rem / 300</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">h1</span>
+      <span style="font-family:'Outfit';font-size:1.5rem;font-weight:700;color:#000;">Good Morning</span>
+      <span class="type-spec">1.5rem / 700</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">h2</span>
+      <span style="font-family:'Outfit';font-size:1.3rem;font-weight:700;color:#000;">Diary</span>
+      <span class="type-spec">1.3rem / 700</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">h3</span>
+      <span style="font-size:1.1rem;font-weight:600;color:#000;">월요일 — 2건</span>
+      <span class="type-spec">1.1rem / 600</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">body-lg</span>
+      <span style="font-size:0.9rem;color:#000;">수면이 부족해요, 오늘 수업이 있어요.</span>
+      <span class="type-spec">0.9rem / 400</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">body</span>
+      <span style="font-size:0.84rem;color:#333;">오늘 하루도 차분하게 시작해볼까요.</span>
+      <span class="type-spec">0.84rem / 400</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">body-sm</span>
+      <span style="font-size:0.78rem;color:#808080;">08:30-17:30 아고라02</span>
+      <span class="type-spec">0.78rem / 400</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">caption</span>
+      <span style="font-size:0.72rem;color:#808080;">진 집사가 준비한 오늘의 브리핑입니다</span>
+      <span class="type-spec">0.72rem / 400</span>
+    </div>
+    <div class="type-row">
+      <span class="type-label">label</span>
+      <span style="font-family:'Outfit';font-size:0.6rem;font-weight:500;color:#b3b3b3;text-transform:uppercase;letter-spacing:0.1em;">SCHEDULE</span>
+      <span class="type-spec">0.6rem / 500 / UC</span>
+    </div>
+    <div class="type-row" style="border:none;">
+      <span class="type-label">micro</span>
+      <span style="font-size:0.55rem;color:#b3b3b3;">일 월 화 수 목 금 토</span>
+      <span class="type-spec">0.55rem / 400</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 4. Spacing ═══ -->
+<div class="section">
+  <div class="section-num">04 — Foundation</div>
+  <div class="section-title">Spacing</div>
+  <div class="section-desc">4px 기반 시스템</div>
+
+  <div class="card">
+    <div class="card-title">Scale</div>
+    <div class="space-row"><span class="space-label">space-1</span><div class="space-bar" style="width:4px;"></div><span class="space-val">4px</span></div>
+    <div class="space-row"><span class="space-label">space-2</span><div class="space-bar" style="width:8px;"></div><span class="space-val">8px</span></div>
+    <div class="space-row"><span class="space-label">space-3</span><div class="space-bar" style="width:12px;"></div><span class="space-val">12px</span></div>
+    <div class="space-row"><span class="space-label">space-4</span><div class="space-bar" style="width:16px;"></div><span class="space-val">16px</span></div>
+    <div class="space-row"><span class="space-label">space-5</span><div class="space-bar" style="width:20px;"></div><span class="space-val">20px</span></div>
+    <div class="space-row"><span class="space-label">space-6</span><div class="space-bar" style="width:24px;"></div><span class="space-val">24px</span></div>
+    <div class="space-row"><span class="space-label">space-7</span><div class="space-bar" style="width:28px;"></div><span class="space-val">28px — page padding</span></div>
+    <div class="space-row"><span class="space-label">space-8</span><div class="space-bar" style="width:32px;"></div><span class="space-val">32px</span></div>
+    <div class="space-row"><span class="space-label">space-10</span><div class="space-bar" style="width:40px;"></div><span class="space-val">40px</span></div>
+  </div>
+</div>
+
+<!-- ═══ 5. Shape ═══ -->
+<div class="section">
+  <div class="section-num">05 — Foundation</div>
+  <div class="section-title">Shape</div>
+  <div class="section-desc">그림자 없음. 배경색 차이와 테두리로 깊이를 표현합니다.</div>
+
+  <div class="card">
+    <div class="card-title">Border Radius</div>
+    <div class="radius-grid">
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:4px;"><span class="radius-label">4px</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">sm</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:6px;"><span class="radius-label">6px</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">md</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:10px;"><span class="radius-label">10px</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">lg</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:12px;"><span class="radius-label">12px</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">xl</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:20px;"><span class="radius-label">pill</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">20px</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="radius-item" style="border-radius:50%;"><span class="radius-label">full</span></div>
+        <div style="font-size:0.5rem;color:#808080;margin-top:4px;">50%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 6. Motion ═══ -->
+<div class="section">
+  <div class="section-num">06 — Foundation</div>
+  <div class="section-title">Motion</div>
+  <div class="section-desc">장식적 애니메이션 없음. 상태 전환만.</div>
+
+  <div class="card">
+    <div class="card-title">Duration</div>
+    <div class="motion-row"><span class="motion-name">instant</span><div class="motion-bar" style="width:4px;"></div><span class="motion-val">0ms</span><span style="font-size:0.55rem;color:#b3b3b3;">체크 토글</span></div>
+    <div class="motion-row"><span class="motion-name">fast</span><div class="motion-bar" style="width:30px;"></div><span class="motion-val">150ms</span><span style="font-size:0.55rem;color:#b3b3b3;">탭 전환</span></div>
+    <div class="motion-row"><span class="motion-name">normal</span><div class="motion-bar" style="width:60px;"></div><span class="motion-val">300ms</span><span style="font-size:0.55rem;color:#b3b3b3;">저장 피드백</span></div>
+    <div class="motion-row"><span class="motion-name">slow</span><div class="motion-bar" style="width:160px;"></div><span class="motion-val">800ms</span><span style="font-size:0.55rem;color:#b3b3b3;">날씨 전환</span></div>
+  </div>
+</div>
+
+<!-- ═══ 7. Touch ═══ -->
+<div class="section">
+  <div class="section-num">07 — Foundation</div>
+  <div class="section-title">Touch & Interaction</div>
+  <div class="section-desc">최소 터치 영역 44×44px</div>
+
+  <div class="card">
+    <div class="card-title">Touch Targets</div>
+    <div class="touch-grid">
+      <div style="text-align:center;">
+        <div class="touch-box" style="width:44px;height:44px;border-radius:8px;">
+          <div class="touch-inner" style="width:16px;height:16px;"></div>
+        </div>
+        <div style="font-size:0.55rem;color:#808080;margin-top:4px;">체크 원<br>16px visual<br>44px touch</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="touch-box" style="width:44px;height:44px;border-radius:8px;">
+          <div style="background:#000;border-radius:4px;width:30px;height:30px;"></div>
+        </div>
+        <div style="font-size:0.55rem;color:#808080;margin-top:4px;">컨디션 버튼<br>30px visual<br>44px touch</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="touch-box" style="width:80px;height:44px;border-radius:8px;">
+          <span style="font-size:0.65rem;color:#60A5FA;">OK</span>
+        </div>
+        <div style="font-size:0.55rem;color:#808080;margin-top:4px;">버튼<br>44px height</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">States</div>
+    <div class="states-row">
+      <div class="state-item">
+        <div class="state-circle" style="border:1.5px solid #60A5FA;"></div>
+        <div class="state-name">Default</div>
+      </div>
+      <div class="state-item">
+        <div class="state-circle" style="border:2px solid #3B82F6;background:rgba(96,165,250,0.1);"></div>
+        <div class="state-name">Hover</div>
+      </div>
+      <div class="state-item">
+        <div class="state-circle" style="background:#60A5FA;">
+          <svg width="10" height="8" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="state-name">Selected</div>
+      </div>
+      <div class="state-item">
+        <div class="state-circle" style="border:1.5px solid #E6E6E6;opacity:0.38;"></div>
+        <div class="state-name">Disabled</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 8. Data Viz ═══ -->
+<div class="section">
+  <div class="section-num">08 — Foundation</div>
+  <div class="section-title">Data Visualization</div>
+  <div class="section-desc">차트 컬러 룰 + 감정 시각화</div>
+
+  <div class="card">
+    <div class="card-title">Bar Chart — Sleep</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:0.55rem;color:#b3b3b3;">7h 목표</span>
+      <div style="flex:1;height:1px;border-top:2px dashed #B3B3B3;"></div>
+    </div>
+    <div class="mini-chart">
+      <div class="mini-bar" style="height:57%;background:#E6E6E6;"></div>
+      <div class="mini-bar" style="height:46%;background:#E6E6E6;"></div>
+      <div class="mini-bar" style="height:75%;background:#60A5FA;"></div>
+      <div class="mini-bar" style="height:70%;background:#60A5FA;"></div>
+      <div class="mini-bar" style="height:55%;background:#E6E6E6;"></div>
+      <div class="mini-bar" style="height:80%;background:#60A5FA;"></div>
+      <div class="mini-bar" style="height:65%;background:#E6E6E6;"></div>
+    </div>
+    <div style="display:flex;gap:2px;margin-top:4px;">
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">일</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">월</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">화</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">수</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">목</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">금</div>
+      <div style="flex:1;text-align:center;font-size:0.45rem;color:#b3b3b3;">토</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Color Ratio Bar — Emotion (Week)</div>
+    <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin-bottom:8px;">
+      <div style="width:35%;background:#FBBF24;"></div>
+      <div style="width:25%;background:#60A5FA;"></div>
+      <div style="width:20%;background:#CBD5E1;"></div>
+      <div style="width:12%;background:#34D399;"></div>
+      <div style="width:8%;background:#A78BFA;"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:3px;font-size:0.6rem;"><span style="width:8px;height:8px;border-radius:50%;background:#FBBF24;"></span>기쁨 35%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:0.6rem;"><span style="width:8px;height:8px;border-radius:50%;background:#60A5FA;"></span>평온 25%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:0.6rem;"><span style="width:8px;height:8px;border-radius:50%;background:#CBD5E1;"></span>피곤 20%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:0.6rem;"><span style="width:8px;height:8px;border-radius:50%;background:#34D399;"></span>감사 12%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:0.6rem;"><span style="width:8px;height:8px;border-radius:50%;background:#A78BFA;"></span>불안 8%</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Color Strip — Emotion (Month)</div>
+    <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;margin-bottom:8px;">
+      <div style="flex:1;background:#FBBF24;"></div>
+      <div style="flex:1;background:#60A5FA;"></div>
+      <div style="flex:1;background:#FBBF24;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#CBD5E1;"></div>
+      <div style="flex:1;background:#34D399;"></div>
+      <div style="flex:1;background:#FBBF24;"></div>
+      <div style="flex:1;background:#60A5FA;"></div>
+      <div style="flex:1;background:#A78BFA;"></div>
+      <div style="flex:1;background:#FBBF24;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#60A5FA;"></div>
+      <div style="flex:1;background:#CBD5E1;"></div>
+      <div style="flex:1;background:#34D399;"></div>
+      <div style="flex:1;background:#FBBF24;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+      <div style="flex:1;background:#F0F0F0;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.5rem;color:#b3b3b3;">
+      <span>1일</span><span>10일</span><span>20일</span><span>30일</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 9. Components Preview ═══ -->
+<div class="section">
+  <div class="section-num">09 — Foundation</div>
+  <div class="section-title">Component Samples</div>
+  <div class="section-desc">Foundation 위에 만들어진 핵심 컴포넌트</div>
+
+  <div class="card">
+    <div class="card-title">Check Items</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;min-height:44px;cursor:pointer;">
+      <span style="width:16px;height:16px;border-radius:50%;background:#60A5FA;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      <span style="font-size:0.84rem;color:#b3b3b3;text-decoration:line-through;flex:1;">아침 스트레칭 10분</span>
+      <span style="font-size:0.6rem;color:#60A5FA;">3일째</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;min-height:44px;cursor:pointer;">
+      <span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #60A5FA;flex-shrink:0;"></span>
+      <span style="font-size:0.84rem;color:#333;flex:1;">물 8잔 마시기</span>
+      <span style="font-size:0.6rem;color:#b3b3b3;">잊지 않으셨죠?</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buttons</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <button style="padding:12px 24px;font-size:0.85rem;font-weight:600;color:#fff;background:#000;border:none;border-radius:10px;min-height:44px;cursor:pointer;">저장</button>
+      <button style="padding:8px 16px;font-size:0.75rem;font-weight:600;color:#fff;background:#60A5FA;border:none;border-radius:6px;min-height:34px;cursor:pointer;">OK</button>
+      <button style="padding:8px 16px;font-size:0.75rem;font-weight:600;color:#60A5FA;background:transparent;border:1px solid #60A5FA;border-radius:6px;min-height:34px;cursor:pointer;">추가</button>
+      <button style="font-size:0.6rem;color:#b3b3b3;background:none;border:none;cursor:pointer;">변경</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Section Label Pattern</div>
+    <div style="font-family:'Outfit';font-size:0.6rem;font-weight:500;color:#b3b3b3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">SCHEDULE</div>
+    <div style="font-size:1.1rem;font-weight:600;color:#000;">월요일 — 2건</div>
+    <div style="font-size:0.78rem;color:#333;padding:3px 0;"><span style="font-family:'Outfit';font-size:0.72rem;color:#b3b3b3;margin-right:4px;">11:00-11:30</span>교무회의</div>
+    <div style="font-size:0.78rem;color:#333;padding:3px 0;"><span style="font-family:'Outfit';font-size:0.72rem;color:#b3b3b3;margin-right:4px;">15:00-16:00</span>취업전담 회의</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Insight Card</div>
+    <div style="font-size:0.85rem;color:#000;line-height:1.7;padding-left:14px;border-left:2px solid #60A5FA;">
+      수면이 5.7시간으로 부족해요, 오늘 교무회의와 취업전담 회의가 있어요. 이런 부분을 챙겨보세요:
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 10. Content ═══ -->
+<div class="section">
+  <div class="section-num">10 — Foundation</div>
+  <div class="section-title">Content</div>
+  <div class="section-desc">용어, 날짜 형식, 빈 상태</div>
+
+  <div class="card">
+    <div class="card-title">Date Formats</div>
+    <div style="margin-bottom:8px;">
+      <span style="font-family:'Outfit';font-size:0.6rem;color:#b3b3b3;text-transform:uppercase;letter-spacing:0.1em;">SUN, MAY 04</span>
+      <span style="font-size:0.55rem;color:#b3b3b3;margin-left:8px;">— 헤더 날짜</span>
+    </div>
+    <div style="margin-bottom:8px;">
+      <span style="font-size:0.85rem;font-weight:700;color:#000;">5/4 (월요일)</span>
+      <span style="font-size:0.55rem;color:#b3b3b3;margin-left:8px;">— 스케줄 날짜</span>
+    </div>
+    <div style="margin-bottom:8px;">
+      <span style="font-family:'Outfit';font-size:0.72rem;color:#b3b3b3;">08:30-17:30</span>
+      <span style="font-size:0.55rem;color:#b3b3b3;margin-left:8px;">— 시간</span>
+    </div>
+    <div>
+      <span style="font-family:'Outfit';font-size:0.78rem;font-weight:500;color:#808080;">2026년 5월</span>
+      <span style="font-size:0.55rem;color:#b3b3b3;margin-left:8px;">— 월 표시</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Empty States</div>
+    <div style="font-size:0.78rem;color:#b3b3b3;margin-bottom:4px;">기록 없음</div>
+    <div style="font-size:0.78rem;color:#b3b3b3;margin-bottom:4px;">일정 없음</div>
+    <div style="font-size:0.78rem;color:#b3b3b3;">잊지 않으셨죠?</div>
+  </div>
+</div>
+
+<div style="text-align:center;font-size:0.65rem;color:#b3b3b3;padding:32px 0;">
+  Life OS Design Foundations v1 — 2026-05-05
+</div>
+
+</div>
+</body>
+</html>

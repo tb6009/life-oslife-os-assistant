@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — Activity Tracker 시안 (A/B/C)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+    color: #333;
+  }
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center;
+    font-size: 0.84rem;
+    color: #6B7280;
+    margin-bottom: 28px;
+    max-width: 720px;
+  }
+
+  .phones-row {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .phone-wrap { width: 100%; max-width: 380px; }
+
+  .label-block {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+  }
+  .label-tag {
+    display: inline-block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .a-tag { background: #5E9972; }
+  .b-tag { background: #5A86B0; }
+  .c-tag { background: #A8728A; }
+
+  .label-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+  .label-desc { font-size: 0.75rem; color: #6B7280; line-height: 1.5; margin-bottom: 8px; }
+  .label-meta { font-size: 0.7rem; color: #9CA3AF; }
+  .label-meta b { color: #555; font-weight: 600; }
+
+  .phone {
+    background: #000;
+    border-radius: 40px;
+    padding: 8px;
+  }
+  .screen {
+    background: #fff;
+    border-radius: 32px;
+    overflow: hidden;
+    min-height: 760px;
+    padding: 18px 22px 24px;
+  }
+
+  /* 홈 상단 */
+  .hero {
+    background: linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%);
+    border-radius: 18px;
+    padding: 16px 18px;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  .hero-temp { font-family: 'Outfit'; font-size: 1.6rem; font-weight: 600; }
+  .hero-cond { font-size: 0.74rem; opacity: 0.9; }
+
+  .greeting { font-size: 1.05rem; font-weight: 700; color: #000; margin-bottom: 2px; }
+  .date { font-size: 0.7rem; color: #6B7280; font-family: 'Outfit'; margin-bottom: 16px; }
+
+  /* 활동 추적기 박스 */
+  .tracker {
+    background: linear-gradient(180deg, #fafafa, #f5f5f5);
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+  .tracker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .tracker-title {
+    font-family: 'Outfit';
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .tracker-period {
+    font-size: 0.65rem;
+    color: #9CA3AF;
+    font-family: 'Outfit';
+  }
+  .tracker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 0.8rem;
+  }
+  .tag-chip {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    min-width: 88px;
+  }
+  .chip-paper { background: rgba(94,153,114,0.15); color: #5E9972; }
+  .chip-lineage { background: rgba(168,114,138,0.15); color: #A8728A; }
+  .chip-writing { background: rgba(90,134,176,0.15); color: #5A86B0; }
+  .chip-meeting { background: rgba(160,124,80,0.15); color: #A07C50; }
+  .chip-routine { background: rgba(126,107,168,0.15); color: #7E6BA8; }
+  .chip-todo { background: rgba(154,138,85,0.15); color: #9A8A55; }
+
+  .dots { display: flex; gap: 3px; flex: 1; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #E5E7EB;
+  }
+  .dot.on { background: currentColor; opacity: 0.85; }
+  .dot.heavy { background: currentColor; }
+  .dots.paper { color: #5E9972; }
+  .dots.lineage { color: #A8728A; }
+  .dots.writing { color: #5A86B0; }
+  .dots.meeting { color: #A07C50; }
+  .dots.routine { color: #7E6BA8; }
+  .dots.todo { color: #9A8A55; }
+
+  .count {
+    font-size: 0.7rem;
+    color: #6B7280;
+    font-family: 'Outfit';
+    font-weight: 500;
+    flex-shrink: 0;
+    width: 50px;
+    text-align: right;
+  }
+
+  /* 카테고리 분류 섹션 */
+  .category-section { margin-top: 6px; }
+  .cat-header {
+    font-family: 'Outfit';
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .cat-card {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .cat-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .cat-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .cat-card-count {
+    font-size: 0.65rem;
+    color: #9CA3AF;
+    font-family: 'Outfit';
+  }
+  .cat-item {
+    font-size: 0.74rem;
+    color: #333;
+    line-height: 1.5;
+    padding: 2px 0 2px 10px;
+    border-left: 2px solid;
+    margin-bottom: 4px;
+  }
+  .cat-item.paper { border-color: rgba(94,153,114,0.4); }
+  .cat-item.lineage { border-color: rgba(168,114,138,0.4); }
+  .cat-item.writing { border-color: rgba(90,134,176,0.4); }
+  .cat-item.meeting { border-color: rgba(160,124,80,0.4); }
+  .cat-item.routine { border-color: rgba(126,107,168,0.4); }
+  .cat-item.todo { border-color: rgba(154,138,85,0.4); }
+  .cat-item-source {
+    display: inline-block;
+    font-size: 0.6rem;
+    color: #9CA3AF;
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    font-family: 'Outfit';
+  }
+  .cat-item-date {
+    font-size: 0.62rem;
+    color: #9CA3AF;
+    font-family: 'Outfit';
+    margin-left: 4px;
+  }
+
+  /* 푸터 노트 */
+  .footer-note {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .note-a { background: rgba(94,153,114,0.08); color: #4A7A5C; }
+  .note-b { background: rgba(90,134,176,0.08); color: #4A6B8E; }
+  .note-c { background: rgba(168,114,138,0.08); color: #885A6E; }
+
+  .summary-table {
+    margin: 30px auto 0;
+    max-width: 900px;
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e6e6e6;
+  }
+  .summary-table table { width: 100%; border-collapse: collapse; }
+  .summary-table th, .summary-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.82rem;
+    vertical-align: top;
+  }
+  .summary-table th {
+    background: #fafafa;
+    font-family: 'Outfit';
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+  .summary-table .opt-a { color: #5E9972; font-weight: 600; }
+  .summary-table .opt-b { color: #5A86B0; font-weight: 600; }
+  .summary-table .opt-c { color: #A8728A; font-weight: 600; }
+
+  @media (max-width: 1200px) {
+    .phones-row { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">Activity Tracker — 데이터 소스 시안 (A / B / C)</div>
+<div class="page-sub">홈 화면에 해시태그 활동 추적기를 넣을 때, 어디 데이터를 끌어올지에 따라 보여지는 내용이 달라집니다. 같은 UI에 서로 다른 입력 소스를 적용한 결과를 비교합니다.</div>
+
+<div class="phones-row">
+
+  <!-- ========= 옵션 A ========= -->
+  <div class="phone-wrap">
+    <div class="label-block">
+      <span class="label-tag a-tag">Option A</span>
+      <div class="label-title">Thesis 로그만</div>
+      <div class="label-desc">논문 작업 기록(Worked/Todo)만 분석.<br>다른 활동은 추적기에 안 나옴.</div>
+      <div class="label-meta"><b>데이터 소스:</b> thesis_logs</div>
+    </div>
+
+    <div class="phone"><div class="screen">
+      <div class="hero">
+        <div class="hero-temp">19°</div>
+        <div class="hero-cond">맑음 · 화요일</div>
+      </div>
+      <div class="greeting">좋은 오후예요</div>
+      <div class="date">TUE, MAY 26</div>
+
+      <!-- 추적기 -->
+      <div class="tracker">
+        <div class="tracker-head">
+          <div class="tracker-title">📈 Activity</div>
+          <div class="tracker-period">최근 7일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-paper">#논문읽기</span>
+          <div class="dots paper">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot on"></div><div class="dot heavy"></div>
+          </div>
+          <div class="count">6일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-lineage">#연구계보</span>
+          <div class="dots lineage">
+            <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot on"></div>
+          </div>
+          <div class="count">3일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-writing">#글쓰기</span>
+          <div class="dots writing">
+            <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+          </div>
+          <div class="count">2일</div>
+        </div>
+      </div>
+
+      <!-- 카테고리 -->
+      <div class="category-section">
+        <div class="cat-header">최근 활동 (Thesis)</div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #5E9972;">📚 논문읽기</div>
+            <div class="cat-card-count">6건</div>
+          </div>
+          <div class="cat-item paper">푸코 『말과 사물』 3장 30p<span class="cat-item-date">오늘</span></div>
+          <div class="cat-item paper">에피스테메 개념 정리<span class="cat-item-date">어제</span></div>
+          <div class="cat-item paper">2장 마무리<span class="cat-item-date">5/24</span></div>
+        </div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #A8728A;">🌳 연구계보</div>
+            <div class="cat-card-count">3건</div>
+          </div>
+          <div class="cat-item lineage">부르디외-푸코 사상사 정리 시작<span class="cat-item-date">오늘</span></div>
+          <div class="cat-item lineage">계보학 도식 초안<span class="cat-item-date">5/22</span></div>
+        </div>
+      </div>
+
+      <div class="footer-note note-a">
+        ✓ 심층 연구 활동에 집중<br>
+        ✗ Work 코멘트나 Todo 완료는 안 잡힘
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========= 옵션 B ========= -->
+  <div class="phone-wrap">
+    <div class="label-block">
+      <span class="label-tag b-tag">Option B</span>
+      <div class="label-title">Thesis + Work</div>
+      <div class="label-desc">논문 작업 + 일반 프로젝트 코멘트까지.<br>작업 흐름 전반이 보임.</div>
+      <div class="label-meta"><b>데이터 소스:</b> thesis_logs + project_comments</div>
+    </div>
+
+    <div class="phone"><div class="screen">
+      <div class="hero">
+        <div class="hero-temp">19°</div>
+        <div class="hero-cond">맑음 · 화요일</div>
+      </div>
+      <div class="greeting">좋은 오후예요</div>
+      <div class="date">TUE, MAY 26</div>
+
+      <div class="tracker">
+        <div class="tracker-head">
+          <div class="tracker-title">📈 Activity</div>
+          <div class="tracker-period">최근 7일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-paper">#논문읽기</span>
+          <div class="dots paper">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot on"></div><div class="dot heavy"></div>
+          </div>
+          <div class="count">6일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-lineage">#연구계보</span>
+          <div class="dots lineage">
+            <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot on"></div>
+          </div>
+          <div class="count">3일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-writing">#글쓰기</span>
+          <div class="dots writing">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div>
+          </div>
+          <div class="count">5일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-meeting">#회의</span>
+          <div class="dots meeting">
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+            <div class="dot on"></div><div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+          </div>
+          <div class="count">3일</div>
+        </div>
+      </div>
+
+      <div class="category-section">
+        <div class="cat-header">최근 활동 (Thesis + Work)</div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #5A86B0;">✍️ 글쓰기</div>
+            <div class="cat-card-count">5건</div>
+          </div>
+          <div class="cat-item writing">063 대시보드 — 디자인 시안 정리<span class="cat-item-source">work</span><span class="cat-item-date">오늘</span></div>
+          <div class="cat-item writing">091 출판기획 — 목차 초고<span class="cat-item-source">work</span><span class="cat-item-date">어제</span></div>
+          <div class="cat-item writing">서론 1.2절 보강<span class="cat-item-source">thesis</span><span class="cat-item-date">5/24</span></div>
+        </div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #5E9972;">📚 논문읽기</div>
+            <div class="cat-card-count">6건</div>
+          </div>
+          <div class="cat-item paper">푸코 『말과 사물』 3장 30p<span class="cat-item-source">thesis</span><span class="cat-item-date">오늘</span></div>
+          <div class="cat-item paper">에피스테메 개념 정리<span class="cat-item-source">thesis</span><span class="cat-item-date">어제</span></div>
+        </div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #A07C50;">💬 회의</div>
+            <div class="cat-card-count">3건</div>
+          </div>
+          <div class="cat-item meeting">10 마음 챗봇 — 캐릭터 톤 점검<span class="cat-item-source">work</span><span class="cat-item-date">어제</span></div>
+        </div>
+      </div>
+
+      <div class="footer-note note-b">
+        ✓ 학술 + 업무 전반 흐름이 한 눈에<br>
+        ✗ Todo 체크는 여전히 안 잡힘
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========= 옵션 C ========= -->
+  <div class="phone-wrap">
+    <div class="label-block">
+      <span class="label-tag c-tag">Option C</span>
+      <div class="label-title">전부 (Thesis + Work + Todo + Routine)</div>
+      <div class="label-desc">모든 자유 텍스트 입력에서 #태그 인식.<br>가장 강력하지만 노이즈도 가장 많음.</div>
+      <div class="label-meta"><b>데이터 소스:</b> 4개 테이블 전부</div>
+    </div>
+
+    <div class="phone"><div class="screen">
+      <div class="hero">
+        <div class="hero-temp">19°</div>
+        <div class="hero-cond">맑음 · 화요일</div>
+      </div>
+      <div class="greeting">좋은 오후예요</div>
+      <div class="date">TUE, MAY 26</div>
+
+      <div class="tracker">
+        <div class="tracker-head">
+          <div class="tracker-title">📈 Activity</div>
+          <div class="tracker-period">최근 7일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-paper">#논문읽기</span>
+          <div class="dots paper">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot on"></div><div class="dot heavy"></div>
+          </div>
+          <div class="count">6일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-writing">#글쓰기</span>
+          <div class="dots writing">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div>
+          </div>
+          <div class="count">5일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-routine">#운동</span>
+          <div class="dots routine">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot on"></div>
+          </div>
+          <div class="count">6일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-lineage">#연구계보</span>
+          <div class="dots lineage">
+            <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot on"></div>
+          </div>
+          <div class="count">3일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-meeting">#회의</span>
+          <div class="dots meeting">
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+            <div class="dot on"></div><div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+          </div>
+          <div class="count">3일</div>
+        </div>
+        <div class="tracker-row">
+          <span class="tag-chip chip-todo">#독서</span>
+          <div class="dots todo">
+            <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+            <div class="dot on"></div><div class="dot"></div><div class="dot on"></div><div class="dot on"></div>
+          </div>
+          <div class="count">4일</div>
+        </div>
+      </div>
+
+      <div class="category-section">
+        <div class="cat-header">최근 활동 (전체)</div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #7E6BA8;">🏃 운동</div>
+            <div class="cat-card-count">6건</div>
+          </div>
+          <div class="cat-item routine">아침 스트레칭 30분<span class="cat-item-source">routine</span><span class="cat-item-date">오늘</span></div>
+          <div class="cat-item routine">저녁 산책 5km<span class="cat-item-source">routine</span><span class="cat-item-date">어제</span></div>
+        </div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #5E9972;">📚 논문읽기</div>
+            <div class="cat-card-count">6건</div>
+          </div>
+          <div class="cat-item paper">푸코 『말과 사물』 3장 30p<span class="cat-item-source">thesis</span><span class="cat-item-date">오늘</span></div>
+        </div>
+
+        <div class="cat-card">
+          <div class="cat-card-head">
+            <div class="cat-card-title" style="color: #9A8A55;">📖 독서</div>
+            <div class="cat-card-count">4건</div>
+          </div>
+          <div class="cat-item todo">『코스모스』 5장 읽기<span class="cat-item-source">todo</span><span class="cat-item-date">오늘</span></div>
+          <div class="cat-item todo">『파이드로스』 메모 정리<span class="cat-item-source">todo</span><span class="cat-item-date">5/22</span></div>
+        </div>
+      </div>
+
+      <div class="footer-note note-c">
+        ✓ 일상·업무·연구 전체 활동 패턴 파악<br>
+        ✗ 4개 입력 위치 모두에 #태그 인식 추가 필요 (구현 복잡도 ↑)
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<!-- 비교 표 -->
+<div class="summary-table">
+  <table>
+    <thead>
+      <tr>
+        <th>비교 항목</th>
+        <th><span class="opt-a">A — Thesis만</span></th>
+        <th><span class="opt-b">B — Thesis + Work</span></th>
+        <th><span class="opt-c">C — 전부</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>구현 복잡도</b></td>
+        <td>낮음 (1곳)</td>
+        <td>중간 (2곳)</td>
+        <td>높음 (4곳)</td>
+      </tr>
+      <tr>
+        <td><b>잡히는 활동</b></td>
+        <td>논문 작업만</td>
+        <td>논문 + 프로젝트 코멘트</td>
+        <td>논문 + 일 + 할일 + 루틴</td>
+      </tr>
+      <tr>
+        <td><b>"꾸준한지" 확인이 잘 되는 활동</b></td>
+        <td>논문읽기, 연구계보, 글쓰기 (학술 중심)</td>
+        <td>+ 회의, 업무 글쓰기, 디자인 등</td>
+        <td>+ 운동, 독서, 식단 등 일상 루틴까지</td>
+      </tr>
+      <tr>
+        <td><b>노이즈/오태깅 위험</b></td>
+        <td>낮음</td>
+        <td>중간</td>
+        <td>높음 (Todo 짧은 문구가 #태그 안 가질 가능성)</td>
+      </tr>
+      <tr>
+        <td><b>홈에서 보여줄 가치</b></td>
+        <td>연구 모드일 때 유용</td>
+        <td>업무·연구 모드일 때 유용</td>
+        <td>전체 라이프 모드일 때 유용</td>
+      </tr>
+      <tr>
+        <td><b>처음 시작하기 적합도</b></td>
+        <td>⭐⭐⭐ (이미 기반 있음)</td>
+        <td>⭐⭐ (Work 약간만 확장)</td>
+        <td>⭐ (모든 입력 위치 손봐야 함)</td>
+      </tr>
+      <tr>
+        <td><b>나중에 확장 가능성</b></td>
+        <td>→ B → C로 단계적 확장 쉬움</td>
+        <td>→ C로 확장 쉬움</td>
+        <td>이미 최대</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div style="max-width: 720px; margin: 24px auto 0; padding: 16px 20px; background: #fff8e1; border-radius: 10px; font-size: 0.82rem; line-height: 1.6; color: #6B5E3D;">
+  <b>제 추천:</b> <span style="color: #5E9972;">Option A로 시작</span> → 안정화 후 B로 확장 → 필요시 C까지.<br>
+  처음부터 C로 가면 4곳 입력 UX(자동완성 등)를 한꺼번에 고쳐야 해서 시간이 오래 걸리고, 어떤 태그가 정착될지 모르는 상태에서 광범위하게 만들면 결국 안 쓰는 태그가 많아질 가능성이 큽니다. Thesis에서 먼저 패턴이 굳혀진 후 확장하는 게 안전합니다.
+</div>
+
+</body>
+</html>

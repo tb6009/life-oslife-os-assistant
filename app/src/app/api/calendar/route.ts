@@ -9,13 +9,14 @@ function toKSTDateStr(d: Date): string {
   return kst.toISOString().split("T")[0];
 }
 
-/** ISO datetime 문자열에서 HH:MM 직접 추출 (타임존 변환 없이) */
+/** ISO datetime 문자열을 KST HH:MM으로 변환 (UTC·+09:00 등 어떤 오프셋이든 처리) */
 function toKSTTime(isoStr: string): string | null {
-  // Google Calendar API는 사용자 타임존 기준 시간을 반환
-  // 예: "2026-05-15T14:00:00+09:00" → 14:00 추출
-  const match = isoStr.match(/T(\d{2}):(\d{2})/);
-  if (match) return `${match[1]}:${match[2]}`;
-  return null;
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return null;
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const h = String(kst.getUTCHours()).padStart(2, "0");
+  const m = String(kst.getUTCMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
 }
 
 export async function GET() {

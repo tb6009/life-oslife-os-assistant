@@ -9,14 +9,10 @@ function toKSTDateStr(d: Date): string {
   return kst.toISOString().split("T")[0];
 }
 
-/** ISO datetime 문자열을 KST HH:MM으로 변환 (UTC·+09:00 등 어떤 오프셋이든 처리) */
+/** ISO datetime에서 HH:MM 추출 — timeZone:"Asia/Seoul" 지정 후 Google이 +09:00 형식으로 반환 */
 function toKSTTime(isoStr: string): string | null {
-  const d = new Date(isoStr);
-  if (isNaN(d.getTime())) return null;
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-  const h = String(kst.getUTCHours()).padStart(2, "0");
-  const m = String(kst.getUTCMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+  const match = isoStr.match(/T(\d{2}):(\d{2})/);
+  return match ? `${match[1]}:${match[2]}` : null;
 }
 
 export async function GET() {
@@ -67,6 +63,7 @@ export async function GET() {
           timeMax: dayAfterTomorrow.toISOString(),
           singleEvents: true,
           orderBy: "startTime",
+          timeZone: "Asia/Seoul",
           maxResults: 20,
         });
 

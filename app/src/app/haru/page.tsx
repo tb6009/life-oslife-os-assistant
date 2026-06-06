@@ -411,9 +411,10 @@ export default function HaruPage() {
               style={{
                 maxWidth: "82%",
                 padding: "6px 10px",
-                fontSize: "0.8rem",
+                fontSize: "0.93rem",
                 color: "#333",
                 lineHeight: 1.35,
+                letterSpacing: "0.05em",
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",

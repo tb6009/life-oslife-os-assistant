@@ -64,7 +64,7 @@ function CollapsibleUpcoming({ tomorrowData, dayAfterData, yesterdayData }: {
         <div className="font-heading" style={{ fontSize: "0.7rem", fontWeight: 500, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           Tomorrow / Upcoming
         </div>
-        <span style={{ fontSize: "0.7rem", color: "#6B7280" }}>{open ? "▲" : "▼"}</span>
+        <span style={{ fontSize: "0.7rem", color: "#6B7280" }}>{open ? "▼" : "◀"}</span>
       </div>
       {open && (
         <div style={{ fontSize: "0.82rem", color: "#6B7280", paddingTop: "4px" }}>

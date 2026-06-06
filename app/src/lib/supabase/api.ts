@@ -134,19 +134,24 @@ export async function syncSchedulesFromCalendar(
   events: Array<{ title: string; time: string | null; date: string; source?: string }>
 ) {
   for (const ev of events) {
-    // 같은 날짜+제목+시간이 이미 있으면 스킵
-    const query = supabase
+    // (date, title, source)로 중복 확인 — time은 제외해야 시간 수정 시 업데이트 가능
+    const { data: existing } = await supabase
       .from("schedules")
       .select("id")
       .eq("date", ev.date)
-      .eq("title", ev.title);
-    if (ev.time) query.eq("time", ev.time);
-    const { data: existing } = await query.limit(1);
-    if (existing && existing.length > 0) continue;
-    const { error } = await supabase
-      .from("schedules")
-      .insert({ date: ev.date, title: ev.title, time: ev.time, source: ev.source ?? "google" });
-    if (error) console.error("syncSchedule insert error:", error);
+      .eq("title", ev.title)
+      .eq("source", ev.source ?? "google")
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      // 이미 있으면 time 업데이트 (잘못된 시간 자동 수정)
+      await supabase.from("schedules").update({ time: ev.time }).eq("id", existing[0].id);
+    } else {
+      const { error } = await supabase
+        .from("schedules")
+        .insert({ date: ev.date, title: ev.title, time: ev.time, source: ev.source ?? "google" });
+      if (error) console.error("syncSchedule insert error:", error);
+    }
   }
 }
 

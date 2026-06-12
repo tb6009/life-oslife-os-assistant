@@ -87,7 +87,7 @@ export async function deactivateRoutine(id: number) {
 
 // ── Chat Messages ──
 
-export async function getChatMessages(character: "momi" | "maeum", date: string) {
+export async function getChatMessages(character: "momi" | "maeum" | "manfred", date: string) {
   const { data, error } = await supabase
     .from("chat_messages")
     .select("*")
@@ -99,7 +99,7 @@ export async function getChatMessages(character: "momi" | "maeum", date: string)
 }
 
 export async function saveChatMessage(
-  character: "momi" | "maeum",
+  character: "momi" | "maeum" | "manfred",
   role: "user" | "assistant",
   message: string,
   date: string

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life OS — 하루 + 맨프레드봇 탭 시안 (2026-06-12)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f5f5;
+    padding: 32px 20px 80px;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1360px; margin: 0 auto; }
+
+  .page-title {
+    font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700;
+    text-align: center; margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center; font-size: 0.84rem; color: #6B7280;
+    margin-bottom: 10px; line-height: 1.6;
+  }
+  .page-date {
+    text-align: center; font-family: 'Outfit'; font-size: 0.72rem;
+    color: #9CA3AF; letter-spacing: 0.05em; margin-bottom: 36px;
+  }
+
+  /* ── 섹션 라벨 ── */
+  .section-label {
+    font-family: 'Outfit'; font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: #111; text-align: center;
+    margin-bottom: 8px; margin-top: 48px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .section-desc {
+    text-align: center; font-size: 0.80rem; color: #6B7280;
+    margin-bottom: 28px; line-height: 1.6;
+  }
+
+  /* ── 폰 레이아웃 ── */
+  .phones-row {
+    display: flex; gap: 32px; justify-content: center;
+    flex-wrap: wrap; align-items: flex-start;
+  }
+  .phone-wrap { width: 100%; max-width: 390px; }
+  .phone-label {
+    text-align: center; font-family: 'Outfit'; font-size: 0.68rem;
+    color: #111; text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 6px; font-weight: 700;
+  }
+  .phone-sub {
+    text-align: center; font-size: 0.74rem; color: #9CA3AF;
+    margin-bottom: 14px; line-height: 1.5; padding: 0 8px;
+  }
+  .phone {
+    background: #000; border-radius: 42px; padding: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  }
+  .screen {
+    background: #fff; border-radius: 34px;
+    overflow: hidden; min-height: 780px;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── 탭 바 ── */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid #e6e6e6;
+    padding: 0 20px;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    padding: 12px 0;
+    margin-right: 24px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: #9CA3AF;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    letter-spacing: 0.02em;
+  }
+  .tab-item.active-haru {
+    color: #111;
+    border-bottom-color: #111;
+    font-weight: 600;
+  }
+  .tab-item.active-manfred {
+    color: #1a3a5c;
+    border-bottom-color: #1a3a5c;
+    font-weight: 600;
+  }
+
+  /* ── 하루 탭 ── */
+  .status-bar {
+    padding: 6px 20px 6px;
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    border-bottom: 1px solid #e6e6e6;
+    flex-shrink: 0;
+  }
+  .status-chip {
+    font-size: 0.68rem; padding: 2px 8px; border-radius: 12px;
+  }
+  .chip-green { color: #059669; background: rgba(5,150,105,0.08); }
+  .chip-purple { color: #8B5CF6; background: rgba(139,92,246,0.08); }
+  .chip-gray { color: #6B7280; background: #fafafa; }
+
+  /* ── 맨프레드 헤더 ── */
+  .manfred-header {
+    padding: 12px 20px 10px;
+    border-bottom: 1px solid #e6e6e6;
+    flex-shrink: 0;
+  }
+  .manfred-name {
+    font-family: 'Outfit'; font-size: 0.78rem; font-weight: 600;
+    color: #1a3a5c; letter-spacing: 0.04em;
+  }
+  .manfred-title {
+    font-size: 0.64rem; color: #6B7280; margin-top: 1px; line-height: 1.4;
+  }
+
+  /* ── 채팅 영역 ── */
+  .chat-area {
+    flex: 1; padding: 14px 18px; overflow: hidden;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* 하루 버블 */
+  .bubble-haru {
+    max-width: 84%;
+    padding: 7px 11px;
+    font-size: 0.875rem;
+    color: #333;
+    line-height: 1.45;
+    border-radius: 14px 14px 14px 4px;
+    border: 1px solid #e6e6e6;
+    align-self: flex-start;
+    white-space: pre-line;
+  }
+  .bubble-user-haru {
+    max-width: 84%;
+    padding: 7px 11px;
+    font-size: 0.875rem;
+    color: #333;
+    line-height: 1.45;
+    border-radius: 14px 14px 4px 14px;
+    background: #f2f2f2;
+    align-self: flex-end;
+  }
+
+  /* 맨프레드 버블 */
+  .bubble-manfred {
+    max-width: 90%;
+    padding: 9px 13px;
+    font-size: 0.84rem;
+    color: #1a2a3a;
+    line-height: 1.6;
+    border-radius: 14px 14px 14px 4px;
+    background: #f0f4f8;
+    align-self: flex-start;
+    white-space: pre-line;
+  }
+  .bubble-user-manfred {
+    max-width: 84%;
+    padding: 7px 11px;
+    font-size: 0.875rem;
+    color: #333;
+    line-height: 1.45;
+    border-radius: 14px 14px 4px 14px;
+    background: #f2f2f2;
+    align-self: flex-end;
+  }
+  .bubble-manfred em {
+    font-style: italic;
+    color: #374151;
+  }
+  .manfred-quote {
+    border-left: 2px solid #1a3a5c;
+    padding-left: 8px;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: #4B5563;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ── 입력창 ── */
+  .input-area {
+    padding: 6px 16px 10px;
+    border-top: 1px solid #e6e6e6;
+    display: flex; gap: 8px; align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .input-box {
+    flex: 1;
+    background: #f8f8f8;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    padding: 9px 13px;
+    font-size: 0.84rem;
+    color: #9CA3AF;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .send-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .send-haru { background: #60A5FA; }
+  .send-manfred { background: #1a3a5c; }
+
+  /* ── 네비게이션 바 ── */
+  .bottom-nav {
+    display: flex;
+    border-top: 1px solid #e6e6e6;
+    padding: 8px 0 12px;
+    flex-shrink: 0;
+    background: #fff;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    font-size: 0.58rem; color: #9CA3AF;
+  }
+  .nav-item.active { color: #111; }
+  .nav-icon { font-size: 1.1rem; }
+
+  /* ── 개선 포인트 섹션 ── */
+  .fix-section {
+    background: #fff; border-radius: 16px;
+    padding: 24px 28px; margin-top: 48px;
+    border: 1px solid #e6e6e6;
+    max-width: 860px; margin-left: auto; margin-right: auto;
+  }
+  .fix-title {
+    font-family: 'Outfit'; font-size: 1rem; font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .fix-row {
+    display: flex; gap: 16px; padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 0.84rem; line-height: 1.5;
+  }
+  .fix-row:last-child { border-bottom: none; }
+  .fix-label {
+    font-family: 'Outfit'; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 2px 8px; border-radius: 6px;
+    flex-shrink: 0; height: fit-content; margin-top: 2px;
+  }
+  .label-bug { background: #FEE2E2; color: #B91C1C; }
+  .label-new { background: #DCFCE7; color: #15803D; }
+  .fix-content { color: #374151; }
+  .fix-before { color: #B91C1C; font-size: 0.78rem; margin-top: 4px; }
+  .fix-after { color: #15803D; font-size: 0.78rem; margin-top: 2px; }
+
+  /* ── 비교 설명 ── */
+  .compare-note {
+    background: #fff; border: 1px solid #e6e6e6;
+    border-radius: 12px; padding: 16px 20px;
+    margin-top: 20px; max-width: 860px;
+    margin-left: auto; margin-right: auto;
+    font-size: 0.82rem; color: #374151; line-height: 1.7;
+  }
+  .compare-note strong { color: #111; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-title">하루 + 맨프레드봇 — 탭 통합 시안</div>
+  <div class="page-sub">하루 메뉴에 탭 2개 추가 · 맨프레드봇 GPT-4o 연동 · 하루 버그 수정 포함</div>
+  <div class="page-date">2026-06-12 · Stage 16 Draft</div>
+
+  <!-- ────────────────── 섹션 1 ────────────────── -->
+  <div class="section-label">01 — 하루 탭 (기존 그대로)</div>
+  <div class="section-desc">탭 바만 추가되고, 기존 하루 대화 UI는 변경 없음</div>
+
+  <div class="phones-row">
+
+    <!-- 하루 탭 active -->
+    <div class="phone-wrap">
+      <div class="phone-label">하루 탭 활성</div>
+      <div class="phone-sub">건강 상태 칩 + 기존 채팅 유지</div>
+      <div class="phone">
+        <div class="screen">
+          <!-- 탭 바 -->
+          <div class="tab-bar">
+            <div class="tab-item active-haru">하루</div>
+            <div class="tab-item">맨프레드</div>
+          </div>
+          <!-- 상태 칩 -->
+          <div class="status-bar">
+            <span class="status-chip chip-green">수면 7시간</span>
+            <span class="status-chip chip-green">조깅 30분</span>
+            <span class="status-chip chip-purple">평온</span>
+          </div>
+          <!-- 채팅 -->
+          <div class="chat-area" style="display:flex;flex-direction:column;">
+            <div class="bubble-haru">좋은 아침이에요! 수면 7시간, 잘 주무셨네요. 오늘 오전 11시에 연구회의가 있어요.</div>
+            <div class="bubble-user-haru">어제 논문 피드백 받았는데 좀 막막해</div>
+            <div class="bubble-haru">막막하셨겠어요. 어떤 부분에서 피드백을 받으셨어요? 같이 정리해봐요.</div>
+            <div class="bubble-user-haru">리뷰어가 방법론 섹션 보완 요청했어</div>
+            <div class="bubble-haru">방법론이군요. 어떤 부분을 구체적으로 보완하라고 했는지 알려주시면, 어떻게 접근할지 같이 생각해볼게요.</div>
+          </div>
+          <!-- 입력 -->
+          <div class="input-area">
+            <div class="input-box">하루에게 메시지...</div>
+            <div class="send-btn send-haru">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <!-- 네비 -->
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">📋</div>기록</div>
+            <div class="nav-item active"><div class="nav-icon">☀️</div>하루</div>
+            <div class="nav-item"><div class="nav-icon">⚙️</div>설정</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 맨프레드 탭 active -->
+    <div class="phone-wrap">
+      <div class="phone-label">맨프레드 탭 활성</div>
+      <div class="phone-sub">GPT-4o · 같은 API key · 학술 코칭 페르소나</div>
+      <div class="phone">
+        <div class="screen">
+          <!-- 탭 바 -->
+          <div class="tab-bar">
+            <div class="tab-item">하루</div>
+            <div class="tab-item active-manfred">맨프레드</div>
+          </div>
+          <!-- 맨프레드 헤더 -->
+          <div class="manfred-header">
+            <div class="manfred-name">Manfred Kets de Vries</div>
+            <div class="manfred-title">INSEAD · Leadership & Organisational Change</div>
+          </div>
+          <!-- 채팅 -->
+          <div class="chat-area" style="display:flex;flex-direction:column;">
+            <div class="bubble-manfred">방법론 피드백을 받으셨군요. 먼저 묻겠습니다 — 리뷰어의 지적이 <em>틀렸다</em>고 느끼십니까, 아니면 <em>맞지만 불편하다</em>고 느끼십니까?
+              <div class="manfred-quote">"The first organization you know is the family organization." — 저항의 이유는 늘 표면 아래에 있습니다.</div>
+            </div>
+            <div class="bubble-user-manfred">맞는 말이긴 한데 어디서부터 시작해야 할지 모르겠어요</div>
+            <div class="bubble-manfred">시작점을 찾지 못할 때는 대개 질문이 너무 크기 때문입니다. 리뷰어가 구체적으로 지적한 문장이 있습니까? 하나만 골라봅시다.</div>
+            <div class="bubble-user-manfred">표본 크기와 선정 기준이 불분명하다고 했어요</div>
+            <div class="bubble-manfred">좋습니다. 그것은 다룰 수 있습니다. 표본 선정 기준을 당신은 <em>왜</em> 그 방식으로 정했습니까? 논리부터 복원합시다 — 글은 그다음입니다.</div>
+          </div>
+          <!-- 입력 -->
+          <div class="input-area">
+            <div class="input-box">맨프레드에게 메시지...</div>
+            <div class="send-btn send-manfred">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <!-- 네비 -->
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">📋</div>기록</div>
+            <div class="nav-item active"><div class="nav-icon">☀️</div>하루</div>
+            <div class="nav-item"><div class="nav-icon">⚙️</div>설정</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /phones-row -->
+
+  <!-- ────────────────── 섹션 2 ────────────────── -->
+  <div class="section-label" style="margin-top:56px;">02 — 탭 전환 디테일</div>
+  <div class="section-desc">탭 선택 시 색상과 언더라인으로 구분 · 두 탭의 대화는 독립 저장</div>
+
+  <div class="phones-row">
+
+    <!-- 탭 바 확대 -->
+    <div class="phone-wrap" style="max-width:480px;">
+      <div class="phone-label">탭 바 디자인 확대</div>
+      <div class="phone-sub">하루=블랙, 맨프레드=네이비 언더라인 · 기존 BottomNav 변경 없음</div>
+      <div class="phone">
+        <div class="screen" style="min-height:300px;">
+          <div class="tab-bar" style="padding: 0 24px;">
+            <div class="tab-item active-haru" style="font-size:0.9rem;">하루</div>
+            <div class="tab-item" style="font-size:0.9rem; color:#9CA3AF;">맨프레드</div>
+          </div>
+          <div style="padding: 20px 22px; font-size: 0.78rem; color:#6B7280; line-height:1.8;">
+            <div style="margin-bottom: 10px;">
+              <strong style="color:#111; font-size:0.82rem;">하루 탭 (active)</strong><br>
+              언더라인: <code style="background:#f2f2f2;padding:1px 5px;border-radius:4px;">#111</code> · 글자: <code style="background:#f2f2f2;padding:1px 5px;border-radius:4px;">#111</code>
+            </div>
+            <div style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #f0f0f0;">
+              건강 상태 칩 유지 · 기존 UI 동일
+            </div>
+            <div>
+              <strong style="color:#1a3a5c; font-size:0.82rem;">맨프레드 탭 (active)</strong><br>
+              언더라인: <code style="background:#f2f2f2;padding:1px 5px;border-radius:4px;">#1a3a5c</code> · 글자: <code style="background:#f2f2f2;padding:1px 5px;border-radius:4px;">#1a3a5c</code>
+            </div>
+            <div style="margin-top:8px;">
+              헤더에 "Manfred Kets de Vries" · "INSEAD" 한 줄<br>
+              버블 배경: <code style="background:#f0f4f8;padding:1px 5px;border-radius:4px;">#f0f4f8</code> (하늘빛 회색)<br>
+              전송 버튼: 네이비 <code style="background:#1a3a5c;color:#fff;padding:1px 5px;border-radius:4px;">#1a3a5c</code>
+            </div>
+          </div>
+
+          <div style="padding: 0 22px 16px;">
+            <div style="background:#f8f9fa; border-radius:10px; padding:12px 14px; font-size:0.74rem; color:#374151; line-height:1.6;">
+              <strong style="color:#111;">대화 저장 분리</strong><br>
+              · 하루: channel <code style="background:#f2f2f2;padding:1px 4px;border-radius:3px;">momi</code> (기존)<br>
+              · 맨프레드: channel <code style="background:#f2f2f2;padding:1px 4px;border-radius:3px;">manfred</code> (신규)<br>
+              · 같은 Supabase chat_messages 테이블
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 맨프레드 빈 상태 -->
+    <div class="phone-wrap" style="max-width:380px;">
+      <div class="phone-label">맨프레드 탭 — 첫 방문</div>
+      <div class="phone-sub">오늘 첫 접속 시 맞춤 인사 (하루 컨텍스트 기반)</div>
+      <div class="phone">
+        <div class="screen" style="min-height:500px;">
+          <div class="tab-bar">
+            <div class="tab-item">하루</div>
+            <div class="tab-item active-manfred">맨프레드</div>
+          </div>
+          <div class="manfred-header">
+            <div class="manfred-name">Manfred Kets de Vries</div>
+            <div class="manfred-title">INSEAD · Leadership & Organisational Change</div>
+          </div>
+          <div class="chat-area" style="display:flex;flex-direction:column;">
+            <div class="bubble-manfred">안녕하십니까. 저는 맨프레드 켓츠 드 브리스입니다.
+오늘 하루의 기록을 보니 — 수면도 충분했고, 아침 운동도 하셨군요. 좋은 출발입니다.
+
+무엇이 당신을 이곳으로 이끌었습니까?</div>
+          </div>
+          <div class="input-area">
+            <div class="input-box">맨프레드에게 메시지...</div>
+            <div class="send-btn send-manfred">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">📋</div>기록</div>
+            <div class="nav-item active"><div class="nav-icon">☀️</div>하루</div>
+            <div class="nav-item"><div class="nav-icon">⚙️</div>설정</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /phones-row -->
+
+  <!-- ────────────────── 섹션 3: 버그 수정 ────────────────── -->
+  <div class="fix-section" style="margin-top:56px;">
+    <div class="fix-title">하루 버그 수정 — 함께 적용</div>
+
+    <div class="fix-row">
+      <div class="fix-label label-bug">BUG</div>
+      <div class="fix-content">
+        <strong>루틴·Todo 업데이트 시 글자 깨짐</strong><br>
+        <div class="fix-before">원인: checkSpecialCommand의 regex replace가 한글+특수문자 조합에서 의도치 않게 더 많이 제거<br>
+        예) "매일 아침 스트레칭 루틴 추가해줘" → 제거 후 "아침스" 같은 잘린 텍스트 추출</div>
+        <div class="fix-after">수정: 루틴명 추출 로직을 replace 기반 → 명령어 이전·이후 토큰을 찾아 중간을 추출하는 방식으로 변경</div>
+      </div>
+    </div>
+
+    <div class="fix-row">
+      <div class="fix-label label-bug">BUG</div>
+      <div class="fix-content">
+        <strong>루틴·Todo 업데이트 시 응답이 너무 김</strong><br>
+        <div class="fix-before">원인: 명령어 처리 후에도 GPT를 추가로 호출하는 경우가 있음 · GPT 시스템 프롬프트에 길이 제한 없음</div>
+        <div class="fix-after">수정 ①: checkSpecialCommand에서 처리 완료되면 GPT 미호출 (이미 구현, 일부 경로 누락 수정)<br>
+        수정 ②: GPT 시스템 프롬프트에 "루틴/Todo 업데이트 응답은 1문장 이내" 규칙 추가<br>
+        수정 ③: max_tokens 600 → 유지하되, 명령어 응답은 별도 250 cap 적용</div>
+      </div>
+    </div>
+
+    <div class="fix-row">
+      <div class="fix-label label-new">NEW</div>
+      <div class="fix-content">
+        <strong>맨프레드봇 탭 추가</strong><br>
+        <span style="color:#15803D;">· /api/chat에 manfred character 추가 (GPT-4o, 같은 OpenAI API key)<br>
+        · v0.9 시스템 프롬프트 서버사이드 적용 (파일 외부 참조 안 함 — 빌드 안정성)<br>
+        · 대화 저장: chat_messages 테이블 channel='manfred'<br>
+        · 첫 방문 시 오늘 하루 컨텍스트(건강·일정) 기반 인사말 생성</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 결정 필요 사항 -->
+  <div class="compare-note">
+    <strong>확인이 필요한 항목</strong><br>
+    · 탭 이름: <strong>"하루 | 맨프레드"</strong> vs <strong>"하루 | Manfred"</strong> (영문이 더 자연스러울 수 있음)<br>
+    · 맨프레드 첫 인사: 하루 컨텍스트(수면·일정) 참조 <strong>O</strong> vs 참조 없이 빈 시작 <strong>X</strong><br>
+    · 맨프레드 대화 저장: Supabase에 <strong>영구 저장</strong> vs <strong>세션 내 메모리만</strong>
+  </div>
+
+</div><!-- /container -->
+</body>
+</html>

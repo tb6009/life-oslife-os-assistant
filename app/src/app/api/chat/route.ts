@@ -1,11 +1,16 @@
 import OpenAI from "openai";
-import { HARU_SYSTEM_PROMPT, MOMI_SYSTEM_PROMPT, MAEUM_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { HARU_SYSTEM_PROMPT, MOMI_SYSTEM_PROMPT, MAEUM_SYSTEM_PROMPT, MANFRED_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { createClient } from "@supabase/supabase-js";
 
 const systemPrompts: Record<string, string> = {
   haru: HARU_SYSTEM_PROMPT,
   momi: MOMI_SYSTEM_PROMPT,
   maeum: MAEUM_SYSTEM_PROMPT,
+  manfred: MANFRED_SYSTEM_PROMPT,
+};
+
+const modelMap: Record<string, string> = {
+  manfred: "gpt-4o",
 };
 
 function getToday(): string {
@@ -112,7 +117,7 @@ async function getHealthContext(): Promise<string> {
   return parts.join("\n");
 }
 
-async function getWeeklyChatSummary(): Promise<string> {
+async function getWeeklyChatSummary(character: string): Promise<string> {
   const supabase = createSupabase();
   const sevenDaysAgo = getDateNDaysAgo(7);
   const yesterday = getDateNDaysAgo(1);
@@ -121,7 +126,7 @@ async function getWeeklyChatSummary(): Promise<string> {
   const { data } = await supabase
     .from("chat_messages")
     .select("message, date")
-    .eq("character", "momi")
+    .eq("character", character)
     .eq("role", "assistant")
     .gte("date", sevenDaysAgo)
     .lte("date", yesterday)
@@ -167,7 +172,7 @@ export async function POST(request: Request) {
   try {
     const [healthContext, weeklySummary] = await Promise.all([
       getHealthContext(),
-      getWeeklyChatSummary(),
+      getWeeklyChatSummary(character),
     ]);
 
     let systemPrompt = `${basePrompt}\n\n## 사용자의 오늘 상태 (DB 기록)\n${healthContext}`;
@@ -187,7 +192,7 @@ export async function POST(request: Request) {
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: modelMap[character] ?? "gpt-4o-mini",
       max_tokens: 600,
       messages: openaiMessages,
     });

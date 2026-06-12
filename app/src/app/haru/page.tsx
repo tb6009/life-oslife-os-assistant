@@ -146,6 +146,24 @@ async function generateGreeting(): Promise<string> {
   return `${timeGreeting} 오늘 하루도 함께할게요. 건강, 기분, 일정 — 뭐든 편하게 말씀해주세요.`;
 }
 
+// 맨프레드 첫 인사 생성
+async function generateManfredGreeting(): Promise<string> {
+  const today = getToday();
+  const [health, schedules] = await Promise.all([
+    getHealthLog(today),
+    getSchedules(today),
+  ]);
+
+  const parts: string[] = [];
+  if (health?.sleep_hours) parts.push(`수면 ${health.sleep_hours}시간`);
+  if (schedules && schedules.length > 0) parts.push(`${schedules[0].title} 일정`);
+
+  if (parts.length > 0) {
+    return `${parts.join(", ")}이 보입니다. 오늘 무엇이 당신을 이곳으로 이끌었습니까?`;
+  }
+  return "무엇이 당신을 이곳으로 이끌었습니까?";
+}
+
 // 특수 명령 체크 (API 상태 등)
 function checkSpecialCommand(text: string): string | null {
   const lower = text.toLowerCase();
@@ -162,20 +180,32 @@ function checkSpecialCommand(text: string): string | null {
 
   // 루틴 추가
   if ((lower.includes("루틴") || lower.includes("습관")) && (lower.includes("추가") || lower.includes("넣어") || lower.includes("만들어") || lower.includes("시작"))) {
-    const cleaned = text.replace(/루틴|습관|추가|넣어|만들어|시작|해줘|해주세요|좀|매일/g, "").trim();
-    if (cleaned.length >= 2) {
-      addRoutineByChat(cleaned);
-      return `"${cleaned}" 루틴을 추가했어요! 내일부터 홈에서 체크할 수 있어요.`;
+    const routineName = text
+      .replace(/\s*(?:루틴|습관)(?:으로|을|를|이라고)?\s*(?:추가|넣어|만들어|시작)(?:해줘|해주세요|줘|주세요)?/g, "")
+      .replace(/(?:추가|넣어|만들어|시작)(?:해줘|해주세요|줘|주세요)/g, "")
+      .replace(/(?:루틴|습관)(?:을|를|으로)?/g, "")
+      .replace(/^(?:매일|아침마다|저녁마다|매주|항상)\s+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (routineName.length >= 2) {
+      addRoutineByChat(routineName);
+      return `"${routineName}" 루틴을 추가했어요! 내일부터 홈에서 체크할 수 있어요.`;
     }
     return "어떤 루틴을 추가할까요? 예: '매일 아침 명상 10분 루틴 추가해줘'";
   }
 
   // 루틴 삭제
   if ((lower.includes("루틴") || lower.includes("습관")) && (lower.includes("삭제") || lower.includes("빼") || lower.includes("제거") || lower.includes("없애"))) {
-    const cleaned = text.replace(/루틴|습관|삭제|빼줘|제거|없애|해줘|해주세요|좀/g, "").trim();
-    if (cleaned.length >= 2) {
-      removeRoutineByChat(cleaned);
-      return `"${cleaned}" 관련 루틴을 삭제했어요.`;
+    const routineName = text
+      .replace(/\s*(?:루틴|습관)(?:으로|을|를|이라고)?\s*(?:삭제|제거|없애)(?:해줘|해주세요|줘|주세요)?/g, "")
+      .replace(/(?:삭제|제거|없애)(?:해줘|해주세요|줘|주세요)/g, "")
+      .replace(/빼(?:줘|주세요)/g, "")
+      .replace(/(?:루틴|습관)(?:을|를|으로)?/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (routineName.length >= 2) {
+      removeRoutineByChat(routineName);
+      return `"${routineName}" 관련 루틴을 삭제했어요.`;
     }
     return "어떤 루틴을 삭제할까요? 예: '물 8잔 루틴 빼줘'";
   }
@@ -237,6 +267,13 @@ export default function HaruPage() {
   const [emotionStatus, setEmotionStatus] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<"haru" | "manfred">("haru");
+  const [manfredMessages, setManfredMessages] = useState<Message[]>([]);
+  const [manfredInput, setManfredInput] = useState("");
+  const [manfredLoading, setManfredLoading] = useState(false);
+  const [manfredLoaded, setManfredLoaded] = useState(false);
+  const [manfredInitialized, setManfredInitialized] = useState(false);
+  const manfredBottomRef = useRef<HTMLDivElement>(null);
 
   const loadStatus = useCallback(() => {
     const today = getToday();
@@ -365,39 +402,156 @@ export default function HaruPage() {
     }
   }
 
+  // 맨프레드 탭 초기화 (첫 방문 시 lazy load)
+  useEffect(() => {
+    if (activeTab !== "manfred" || manfredInitialized) return;
+    setManfredInitialized(true);
+    const today = getToday();
+    getChatMessages("manfred", today).then(async (data) => {
+      if (data.length > 0) {
+        setManfredMessages(data.map((m: { role: string; message: string }) => ({
+          role: m.role as "user" | "assistant",
+          text: m.message,
+        })));
+      } else {
+        const greeting = await generateManfredGreeting();
+        setManfredMessages([{ role: "assistant", text: greeting }]);
+      }
+      setManfredLoaded(true);
+    });
+  }, [activeTab, manfredInitialized]);
+
+  useEffect(() => {
+    manfredBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [manfredMessages]);
+
+  async function handleManfredSend() {
+    const text = manfredInput.trim();
+    if (!text || manfredLoading) return;
+    const today = getToday();
+
+    setManfredMessages((prev) => [...prev, { role: "user", text }]);
+    setManfredInput("");
+    setManfredLoading(true);
+
+    await saveChatMessage("manfred", "user", text, today);
+
+    try {
+      const apiKey = localStorage.getItem("openai_api_key") ?? "";
+      if (!apiKey) {
+        const reply = "설정 탭에서 ChatGPT API Key를 입력해주세요.";
+        setManfredMessages((prev) => [...prev, { role: "assistant", text: reply }]);
+        await saveChatMessage("manfred", "assistant", reply, today);
+        setManfredLoading(false);
+        return;
+      }
+
+      const recentMessages = manfredMessages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+      recentMessages.push({ role: "user", text });
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ character: "manfred", messages: recentMessages, apiKey }),
+      });
+
+      let replyText = "잠시 생각이 필요합니다.";
+      if (res.ok) {
+        const data = await res.json();
+        replyText = data.text;
+      }
+
+      setManfredMessages((prev) => [...prev, { role: "assistant", text: replyText }]);
+      await saveChatMessage("manfred", "assistant", replyText, today);
+    } catch {
+      const reply = "연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.";
+      setManfredMessages((prev) => [...prev, { role: "assistant", text: reply }]);
+      await saveChatMessage("manfred", "assistant", reply, today);
+    } finally {
+      setManfredLoading(false);
+    }
+  }
+
+  function handleManfredKeyDown(e: React.KeyboardEvent) {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile && e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleManfredSend();
+    }
+  }
+
   if (!loaded) {
     return <div style={{ padding: "40px 28px", fontSize: "0.84rem", color: "#6B7280" }}>불러오는 중...</div>;
   }
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 70px)" }}>
-      {/* Header — 상단 고정, 최소 높이 */}
+      {/* Header — 상단 고정 */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10, background: "#fff" }}>
-        <div style={{ padding: "3px 28px 3px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-        {healthStatus ? (
-          <span style={{ fontSize: "0.7rem", color: "#059669", background: "rgba(5,150,105,0.08)", padding: "2px 8px", borderRadius: "12px" }}>
-            {healthStatus}
-          </span>
-        ) : (
-          <span style={{ fontSize: "0.7rem", color: "#6B7280", background: "#fafafa", padding: "2px 8px", borderRadius: "12px" }}>
-            건강 기록 없음
-          </span>
-        )}
-        {emotionStatus ? (
-          <span style={{ fontSize: "0.7rem", color: "#8B5CF6", background: "rgba(139,92,246,0.08)", padding: "2px 8px", borderRadius: "12px" }}>
-            {emotionStatus}
-          </span>
-        ) : (
-          <span style={{ fontSize: "0.7rem", color: "#6B7280", background: "#fafafa", padding: "2px 8px", borderRadius: "12px" }}>
-            감정 기록 없음
-          </span>
-        )}
+        {/* 탭 바 */}
+        <div style={{ display: "flex", padding: "0 20px", borderBottom: "1px solid #e6e6e6" }}>
+          {(["haru", "manfred"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: "11px 0",
+                marginRight: "22px",
+                fontSize: "0.84rem",
+                fontWeight: activeTab === tab ? 600 : 400,
+                color: activeTab === tab ? (tab === "manfred" ? "#1a3a5c" : "#111") : "#9CA3AF",
+                background: "none",
+                border: "none",
+                borderBottom: activeTab === tab ? `2px solid ${tab === "manfred" ? "#1a3a5c" : "#111"}` : "2px solid transparent",
+                marginBottom: "-1px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {tab === "haru" ? "하루" : "맨프레드"}
+            </button>
+          ))}
         </div>
-        <div style={{ height: "1px", background: "#e6e6e6" }} />
+
+        {/* 하루 탭: 건강 상태 칩 */}
+        {activeTab === "haru" && (
+          <>
+            <div style={{ padding: "3px 28px 3px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+              {healthStatus ? (
+                <span style={{ fontSize: "0.7rem", color: "#059669", background: "rgba(5,150,105,0.08)", padding: "2px 8px", borderRadius: "12px" }}>
+                  {healthStatus}
+                </span>
+              ) : (
+                <span style={{ fontSize: "0.7rem", color: "#6B7280", background: "#fafafa", padding: "2px 8px", borderRadius: "12px" }}>
+                  건강 기록 없음
+                </span>
+              )}
+              {emotionStatus ? (
+                <span style={{ fontSize: "0.7rem", color: "#8B5CF6", background: "rgba(139,92,246,0.08)", padding: "2px 8px", borderRadius: "12px" }}>
+                  {emotionStatus}
+                </span>
+              ) : (
+                <span style={{ fontSize: "0.7rem", color: "#6B7280", background: "#fafafa", padding: "2px 8px", borderRadius: "12px" }}>
+                  감정 기록 없음
+                </span>
+              )}
+            </div>
+            <div style={{ height: "1px", background: "#e6e6e6" }} />
+          </>
+        )}
+
+        {/* 맨프레드 탭: INSEAD 헤더 */}
+        {activeTab === "manfred" && (
+          <div style={{ padding: "10px 20px 9px", borderBottom: "1px solid #e6e6e6" }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#1a3a5c", letterSpacing: "0.04em" }}>Manfred Kets de Vries</div>
+            <div style={{ fontSize: "0.64rem", color: "#6B7280", marginTop: "1px" }}>INSEAD · Leadership & Organisational Change</div>
+          </div>
+        )}
       </div>
 
-      {/* Chat — 헤더 높이만큼 상단 여백 */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "4px 28px", paddingTop: "32px", overflowX: "hidden" }}>
+      {/* 하루 탭: Chat */}
+      {activeTab === "haru" && <div style={{ flex: 1, overflowY: "auto", padding: "4px 28px", paddingTop: "74px", overflowX: "hidden" }}>
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -496,52 +650,114 @@ export default function HaruPage() {
         )}
 
         <div ref={bottomRef} />
-      </div>
+      </div>}
 
-      {/* Input — 하단 고정 */}
-      <div style={{ padding: "4px 28px 6px", borderTop: "1px solid #e6e6e6", display: "flex", gap: "8px", alignItems: "flex-end", flexShrink: 0 }}>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="하루에게 메시지..."
-          rows={1}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            fontSize: "16px",
-            color: "#333",
-            background: "#f8f8f8",
-            border: "1px solid #e6e6e6",
-            borderRadius: "12px",
-            padding: "10px 14px",
-            outline: "none",
-            resize: "none",
-            lineHeight: 1.5,
-            fontFamily: "inherit",
-          }}
-        />
-        <button
-          onClick={handleSend}
-          disabled={loading}
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "50%",
-            background: loading ? "#6B7280" : "#60A5FA",
-            border: "none",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      {/* 하루 탭: Input */}
+      {activeTab === "haru" && (
+        <div style={{ padding: "4px 28px 6px", borderTop: "1px solid #e6e6e6", display: "flex", gap: "8px", alignItems: "flex-end", flexShrink: 0 }}>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="하루에게 메시지..."
+            rows={1}
+            style={{
+              flex: 1, minWidth: 0, fontSize: "16px", color: "#333",
+              background: "#f8f8f8", border: "1px solid #e6e6e6", borderRadius: "12px",
+              padding: "10px 14px", outline: "none", resize: "none", lineHeight: 1.5, fontFamily: "inherit",
+            }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={loading}
+            style={{
+              width: "40px", height: "40px", borderRadius: "50%",
+              background: loading ? "#6B7280" : "#60A5FA",
+              border: "none", cursor: loading ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* 맨프레드 탭: Chat */}
+      {activeTab === "manfred" && (
+        <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px", paddingTop: "94px", overflowX: "hidden" }}>
+          {!manfredLoaded ? (
+            <div style={{ padding: "40px 8px", fontSize: "0.84rem", color: "#6B7280" }}>불러오는 중...</div>
+          ) : (
+            <>
+              {manfredMessages.map((msg, i) => (
+                <div
+                  key={i}
+                  style={{ marginBottom: "12px", display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}
+                >
+                  <div
+                    style={{
+                      maxWidth: "90%",
+                      padding: msg.role === "user" ? "6px 10px" : "9px 13px",
+                      fontSize: "0.875rem",
+                      color: msg.role === "user" ? "#333" : "#1a2a3a",
+                      lineHeight: msg.role === "user" ? 1.35 : 1.65,
+                      letterSpacing: "0.03em",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                      background: msg.role === "user" ? "#f2f2f2" : "#f0f4f8",
+                    }}
+                  >
+                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+                  </div>
+                </div>
+              ))}
+              {manfredLoading && (
+                <div style={{ marginBottom: "10px", display: "flex" }}>
+                  <div style={{ padding: "9px 13px", background: "#f0f4f8", borderRadius: "14px 14px 14px 4px", fontSize: "0.8rem", color: "#6B7280" }}>
+                    ...
+                  </div>
+                </div>
+              )}
+              <div ref={manfredBottomRef} />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 맨프레드 탭: Input */}
+      {activeTab === "manfred" && (
+        <div style={{ padding: "4px 20px 6px", borderTop: "1px solid #e6e6e6", display: "flex", gap: "8px", alignItems: "flex-end", flexShrink: 0 }}>
+          <textarea
+            value={manfredInput}
+            onChange={(e) => setManfredInput(e.target.value)}
+            onKeyDown={handleManfredKeyDown}
+            placeholder="맨프레드에게 메시지..."
+            rows={1}
+            style={{
+              flex: 1, minWidth: 0, fontSize: "16px", color: "#333",
+              background: "#f8f8f8", border: "1px solid #e6e6e6", borderRadius: "12px",
+              padding: "10px 14px", outline: "none", resize: "none", lineHeight: 1.5, fontFamily: "inherit",
+            }}
+          />
+          <button
+            onClick={handleManfredSend}
+            disabled={manfredLoading}
+            style={{
+              width: "40px", height: "40px", borderRadius: "50%",
+              background: manfredLoading ? "#6B7280" : "#1a3a5c",
+              border: "none", cursor: manfredLoading ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

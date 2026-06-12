@@ -170,15 +170,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const [healthContext, weeklySummary] = await Promise.all([
-      getHealthContext(),
-      getWeeklyChatSummary(character),
-    ]);
+    let systemPrompt: string;
 
-    let systemPrompt = `${basePrompt}\n\n## 사용자의 오늘 상태 (DB 기록)\n${healthContext}`;
-
-    if (weeklySummary) {
-      systemPrompt += `\n\n## 최근 7일 대화 요약\n${weeklySummary}`;
+    if (character === "manfred") {
+      // 맨프레드는 건강·일정 컨텍스트 없이 순수 페르소나로 동작
+      const weeklySummary = await getWeeklyChatSummary(character);
+      systemPrompt = basePrompt;
+      if (weeklySummary) {
+        systemPrompt += `\n\n## 최근 대화 요약\n${weeklySummary}`;
+      }
+    } else {
+      const [healthContext, weeklySummary] = await Promise.all([
+        getHealthContext(),
+        getWeeklyChatSummary(character),
+      ]);
+      systemPrompt = `${basePrompt}\n\n## 사용자의 오늘 상태 (DB 기록)\n${healthContext}`;
+      if (weeklySummary) {
+        systemPrompt += `\n\n## 최근 7일 대화 요약\n${weeklySummary}`;
+      }
     }
 
     const openai = new OpenAI({ apiKey: key });

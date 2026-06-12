@@ -146,22 +146,12 @@ async function generateGreeting(): Promise<string> {
   return `${timeGreeting} 오늘 하루도 함께할게요. 건강, 기분, 일정 — 뭐든 편하게 말씀해주세요.`;
 }
 
-// 맨프레드 첫 인사 생성
-async function generateManfredGreeting(): Promise<string> {
-  const today = getToday();
-  const [health, schedules] = await Promise.all([
-    getHealthLog(today),
-    getSchedules(today),
-  ]);
-
-  const parts: string[] = [];
-  if (health?.sleep_hours) parts.push(`수면 ${health.sleep_hours}시간`);
-  if (schedules && schedules.length > 0) parts.push(`${schedules[0].title} 일정`);
-
-  if (parts.length > 0) {
-    return `${parts.join(", ")}이 보입니다. 오늘 무엇이 당신을 이곳으로 이끌었습니까?`;
-  }
-  return "무엇이 당신을 이곳으로 이끌었습니까?";
+// 맨프레드 첫 인사 — 일정·건강 무관, 고정 오프닝
+function generateManfredGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "오늘 아침 무엇이 당신을 이곳으로 이끌었습니까?";
+  if (hour < 18) return "무엇이 당신을 이곳으로 이끌었습니까?";
+  return "오늘 하루를 마무리하는 시간이군요. 무엇이 당신을 이곳으로 이끌었습니까?";
 }
 
 // 특수 명령 체크 (API 상태 등)
@@ -407,15 +397,14 @@ export default function HaruPage() {
     if (activeTab !== "manfred" || manfredInitialized) return;
     setManfredInitialized(true);
     const today = getToday();
-    getChatMessages("manfred", today).then(async (data) => {
+    getChatMessages("manfred", today).then((data) => {
       if (data.length > 0) {
         setManfredMessages(data.map((m: { role: string; message: string }) => ({
           role: m.role as "user" | "assistant",
           text: m.message,
         })));
       } else {
-        const greeting = await generateManfredGreeting();
-        setManfredMessages([{ role: "assistant", text: greeting }]);
+        setManfredMessages([{ role: "assistant", text: generateManfredGreeting() }]);
       }
       setManfredLoaded(true);
     });

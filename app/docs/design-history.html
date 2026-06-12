@@ -793,6 +793,62 @@
   </div>
 </div>
 
+<!-- Stage 16 — 하루 탭 맨프레드봇 통합 + 하루 버그 수정 -->
+<div class="stage" style="border-left: 4px solid #1a3a5c;">
+  <div class="stage-label" style="color: #1a3a5c;">Stage 16 — 6/12 | 하루 탭에 맨프레드봇 추가 (v0.9.9)</div>
+  <div class="stage-title">하루 페이지 탭 2개 분리 — "하루" / "맨프레드" · 하루 버그 수정 2건</div>
+  <div class="stage-desc">
+    하루 메뉴에 탭 바를 추가해 기존 "하루" 챗봇과 Manfred Kets de Vries(v0.9) 페르소나 봇을 탭으로 통합.
+    맨프레드봇은 GPT-4o + v0.9 페르소나 프롬프트, 같은 OpenAI API key 사용.
+    하루 루틴 추가/삭제 글자 깨짐 및 응답 길이 과다 버그도 함께 수정.
+  </div>
+  <div class="stage-detail">
+    <ul>
+      <li><strong>탭 구조</strong>:
+        <ul>
+          <li>하루 탭: 블랙 언더라인(<code>#111</code>) — 기존 UI 변경 없음, 건강 상태 칩 유지</li>
+          <li>맨프레드 탭: 네이비 언더라인(<code>#1a3a5c</code>) — INSEAD 헤더(이름 + 직함), 네이비 전송 버튼</li>
+          <li>맨프레드 버블 배경: <code>#f0f4f8</code> (하늘빛 회색), 라인하이트 1.65 (강연 텍스트 호흡 반영)</li>
+        </ul>
+      </li>
+      <li><strong>맨프레드봇 동작</strong>:
+        <ul>
+          <li>Manfred Kets de Vries v0.9 페르소나 프롬프트 적용 (INSEAD, 내면극장, 자기 목소리 등)</li>
+          <li>GPT-4o 모델 사용 (하루는 gpt-4o-mini 유지) — <code>modelMap</code>으로 character별 분기</li>
+          <li>Lazy load: 첫 탭 전환 시에만 초기화 (앱 로드 시 불필요한 DB 호출 없음)</li>
+          <li>첫 방문 인사: 오늘 수면·일정 컨텍스트 기반 ("수면 7시간이 보입니다. 무엇이 당신을 이곳으로 이끌었습니까?")</li>
+          <li>대화 저장: Supabase <code>chat_messages</code> 테이블, <code>character='manfred'</code></li>
+          <li>주간 요약: <code>getWeeklyChatSummary</code>를 character 파라미터화 → 맨프레드 과거 대화도 context에 포함</li>
+        </ul>
+      </li>
+      <li><strong>버그 수정 — 루틴 글자 깨짐</strong>:
+        <ul>
+          <li>기존: <code>text.replace(/루틴|습관|추가|...|해줘/g, "")</code> → 한글 조합에서 의도치 않게 중간 글자 제거 ("줘" 잔여 등)</li>
+          <li>수정: 명령 구문을 통째로 제거하는 패턴으로 교체. 잔여 낱말 없음.</li>
+        </ul>
+      </li>
+      <li><strong>버그 수정 — 응답 길이 과다</strong>:
+        <ul>
+          <li>하루 시스템 프롬프트에 "응답 길이 규칙" 섹션 추가: 명령 수행 후 1~2문장 이내, 일반 대화 2~4문장, 6줄 초과 금지</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <div class="tags">
+    <span class="tag added">맨프레드 탭 신규</span>
+    <span class="tag added">GPT-4o (맨프레드 전용)</span>
+    <span class="tag added">Manfred v0.9 페르소나 프롬프트</span>
+    <span class="tag changed">루틴 이름 추출 로직 교체</span>
+    <span class="tag changed">하루 응답 길이 규칙 추가</span>
+    <span class="tag tech">chat_messages character='manfred'</span>
+    <span class="tag tech">getWeeklyChatSummary character 파라미터화</span>
+  </div>
+  <div class="screenshot">
+    시안: <a href="haru-manfred-tab-mockup.html">haru-manfred-tab-mockup.html</a> (Stage 16 Draft, 2026-06-12)<br>
+    커밋: <code>4a5d140</code> — v0.9.9 배포 (Vercel life-os-7wj2, 2026-06-12)
+  </div>
+</div>
+
 </div>
 </body>
 </html>

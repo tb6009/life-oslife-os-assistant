@@ -5,7 +5,10 @@ import { getHealthLog, getJournalEntry, getSchedules, getChatMessages, upsertHea
 
 const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 const dayLabelsFull = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-import { emotionList, getEmotionColor } from "@/lib/theme/emotions";
+import { emotionsByCategory, getEmotionColor, energyLabels, getEnergyColor, formatHour, type EmotionCategory } from "@/lib/theme/emotions";
+
+type CoffeeEntry = { hour: number };
+type EmotionEntry = { hour: number; energy: number; emotions: string[]; custom?: string };
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -33,8 +36,16 @@ export default function TodayTab() {
   const [sleepM, setSleepM] = useState("");
   const [conditionVal, setConditionVal] = useState<number | null>(null);
   const [coffeeVal, setCoffeeVal] = useState<number>(0);
+  const [coffeeLog, setCoffeeLog] = useState<CoffeeEntry[]>([]);
   const [exerciseVal, setExerciseVal] = useState("");
   const [emotionVal, setEmotionVal] = useState<string | null>(null);
+  const [emotionLog, setEmotionLog] = useState<EmotionEntry[]>([]);
+
+  // 새 감정 입력 폼 상태
+  const [energyDraft, setEnergyDraft] = useState<number>(0);
+  const [emotionsDraft, setEmotionsDraft] = useState<string[]>([]);
+  const [customDraft, setCustomDraft] = useState<string>("");
+  const [emotionTab, setEmotionTab] = useState<EmotionCategory>("positive");
 
   // Memo & Daily Review
   const [saved, setSaved] = useState(false);
@@ -126,13 +137,15 @@ export default function TodayTab() {
         } else { setSleepH(""); setSleepM(""); }
         setConditionVal(d.condition ?? null);
         setCoffeeVal(d.coffee ?? 0);
+        setCoffeeLog(Array.isArray(d.coffee_log) ? d.coffee_log : []);
         setExerciseVal(d.exercise ?? "");
       } else {
-        setSleepH(""); setSleepM(""); setConditionVal(null); setCoffeeVal(0); setExerciseVal("");
+        setSleepH(""); setSleepM(""); setConditionVal(null); setCoffeeVal(0); setCoffeeLog([]); setExerciseVal("");
       }
     });
     getJournalEntry(dateStr).then((d) => {
       setEmotionVal(d?.emotion ?? null);
+      setEmotionLog(Array.isArray(d?.emotion_log) ? d.emotion_log : []);
       setMemoVal(d?.memo ?? "");
       setGratefulVal(d?.grateful ?? "");
       setDoneTodayVal(d?.done_today ?? "");
@@ -261,15 +274,6 @@ export default function TodayTab() {
     if (!exerciseVal.trim()) return;
     await upsertHealthLog(toDateStr(selectedDate), { exercise: exerciseVal.trim() });
     setHealth((prev) => ({ ...prev, exercise: exerciseVal.trim() }));
-  }
-
-  async function saveEmotion(em: string) {
-    setEmotionVal(em);
-    await upsertJournalEntry(toDateStr(selectedDate), { emotion: em });
-  }
-
-  async function saveJournalField(field: string, value: string) {
-    await upsertJournalEntry(toDateStr(selectedDate), { [field]: value });
   }
 
   const isToday = toDateStr(selectedDate) === toDateStr(new Date());
@@ -458,15 +462,17 @@ export default function TodayTab() {
           </div>
         </div>
 
-        {/* 커피 */}
+        {/* 커피 — 잔수 + 시간별 로그 */}
         <div style={{ marginBottom: "10px" }}>
           <div style={{ fontSize: "0.68rem", color: "#808080", marginBottom: "4px" }}>커피</div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
               onClick={async () => {
-                const next = Math.max(0, coffeeVal - 1);
-                setCoffeeVal(next);
-                await upsertHealthLog(toDateStr(selectedDate), { coffee: next });
+                if (coffeeLog.length === 0) return;
+                const nextLog = coffeeLog.slice(0, -1);
+                const next = nextLog.length;
+                setCoffeeLog(nextLog); setCoffeeVal(next);
+                await upsertHealthLog(toDateStr(selectedDate), { coffee: next, coffee_log: nextLog });
               }}
               style={{
                 width: "34px", height: "34px", borderRadius: "50%",
@@ -480,9 +486,12 @@ export default function TodayTab() {
             </span>
             <button
               onClick={async () => {
-                const next = coffeeVal + 1;
-                setCoffeeVal(next);
-                await upsertHealthLog(toDateStr(selectedDate), { coffee: next });
+                const isTodayDate = toDateStr(selectedDate) === toDateStr(new Date());
+                const hour = isTodayDate ? new Date().getHours() : 12;
+                const nextLog = [...coffeeLog, { hour }];
+                const next = nextLog.length;
+                setCoffeeLog(nextLog); setCoffeeVal(next);
+                await upsertHealthLog(toDateStr(selectedDate), { coffee: next, coffee_log: nextLog });
               }}
               style={{
                 width: "34px", height: "34px", borderRadius: "50%",
@@ -492,6 +501,19 @@ export default function TodayTab() {
               }}
             >+</button>
           </div>
+          {coffeeLog.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
+              {coffeeLog.map((c, i) => (
+                <span key={i} className="font-heading" style={{
+                  fontSize: "0.68rem", color: "#6B7280",
+                  background: "#f8f8f8", border: "1px solid #e6e6e6",
+                  borderRadius: "10px", padding: "2px 8px",
+                }}>
+                  {formatHour(c.hour)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 운동 */}
@@ -507,22 +529,158 @@ export default function TodayTab() {
           </div>
         </div>
 
-        {/* === Emotion === */}
+        {/* === Emotion === 에너지 슬라이더 + 감정 토글 + 시간별 누적 */}
         <SectionLabel label="Emotion" />
-        {emotionVal ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: getEmotionColor(emotionVal), flexShrink: 0 }} />
-            <span style={{ fontSize: "0.9rem", color: "#000", fontWeight: 500 }}>{emotionVal}</span>
-            <button onClick={() => setEmotionVal(null)} style={{ fontSize: "0.7rem", color: "#6B7280", background: "none", border: "none", cursor: "pointer" }}>변경</button>
+
+        {/* 에너지 슬라이더 (7단계, -3 ~ +3) */}
+        <div style={{ marginBottom: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+            <span style={{ fontSize: "0.68rem", color: "#808080" }}>에너지</span>
+            <span className="font-heading" style={{ fontSize: "0.72rem", color: getEnergyColor(energyDraft), fontWeight: 600 }}>
+              {energyLabels[energyDraft]}
+            </span>
           </div>
-        ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {emotionList.map((e) => (
-              <button key={e} onClick={() => saveEmotion(e)}
-                style={{ fontSize: "0.75rem", color: getEmotionColor(e), background: "#FFFFFF", border: `2px solid ${getEmotionColor(e)}`, borderRadius: "20px", padding: "4px 12px", cursor: "pointer" }}>
-                {e}
+          <input
+            type="range" min={-3} max={3} step={1} value={energyDraft}
+            onChange={(e) => setEnergyDraft(parseInt(e.target.value))}
+            style={{
+              width: "100%", appearance: "none", WebkitAppearance: "none",
+              height: "6px", borderRadius: "3px",
+              background: "linear-gradient(to right, #3B82F6 0%, #93C5FD 33%, #F3F4F6 50%, #FCA5A5 67%, #EF4444 100%)",
+              outline: "none",
+            }}
+          />
+          <style>{`
+            input[type="range"]::-webkit-slider-thumb {
+              -webkit-appearance: none; appearance: none;
+              width: 18px; height: 18px; border-radius: 50%;
+              background: #fff; border: 2px solid #333; cursor: pointer;
+            }
+            input[type="range"]::-moz-range-thumb {
+              width: 18px; height: 18px; border-radius: 50%;
+              background: #fff; border: 2px solid #333; cursor: pointer;
+            }
+          `}</style>
+        </div>
+
+        {/* 카테고리 탭 */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
+          {(["positive", "neutral", "negative"] as EmotionCategory[]).map((cat) => {
+            const label = cat === "positive" ? "긍정" : cat === "neutral" ? "중립" : "부정";
+            const active = emotionTab === cat;
+            return (
+              <button key={cat} onClick={() => setEmotionTab(cat)}
+                style={{
+                  flex: 1, fontSize: "0.72rem", fontWeight: active ? 600 : 500,
+                  color: active ? "#fff" : "#6B7280",
+                  background: active ? "#000" : "#f8f8f8",
+                  border: "1px solid " + (active ? "#000" : "#e6e6e6"),
+                  borderRadius: "6px", padding: "6px 0", cursor: "pointer",
+                }}>
+                {label}
               </button>
+            );
+          })}
+        </div>
+
+        {/* 감정 칩 (다중선택) */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+          {emotionsByCategory[emotionTab].map((em) => {
+            const selected = emotionsDraft.includes(em);
+            return (
+              <button key={em}
+                onClick={() => setEmotionsDraft((prev) => prev.includes(em) ? prev.filter((x) => x !== em) : [...prev, em])}
+                style={{
+                  fontSize: "0.75rem",
+                  color: selected ? "#fff" : getEmotionColor(em),
+                  background: selected ? getEmotionColor(em) : "#fff",
+                  border: `2px solid ${getEmotionColor(em)}`,
+                  borderRadius: "20px", padding: "4px 12px", cursor: "pointer",
+                }}>
+                {em}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 기타 자유 입력 */}
+        <input type="text" value={customDraft} onChange={(e) => setCustomDraft(e.target.value)}
+          placeholder="기타 (직접 입력)"
+          style={{ width: "100%", fontSize: "16px", color: "#333", background: "#f8f8f8", border: "1px solid #e6e6e6", borderRadius: "6px", padding: "8px 10px", outline: "none", fontFamily: "inherit", marginBottom: "8px" }} />
+
+        {/* 기록 버튼 */}
+        <button
+          onClick={async () => {
+            if (emotionsDraft.length === 0 && !customDraft.trim()) return;
+            const isTodayDate = toDateStr(selectedDate) === toDateStr(new Date());
+            const hour = isTodayDate ? new Date().getHours() : 12;
+            const entry: EmotionEntry = {
+              hour, energy: energyDraft,
+              emotions: [...emotionsDraft],
+              ...(customDraft.trim() ? { custom: customDraft.trim() } : {}),
+            };
+            const nextLog = [...emotionLog, entry];
+            setEmotionLog(nextLog);
+            setEmotionsDraft([]); setCustomDraft(""); setEnergyDraft(0);
+            await upsertJournalEntry(toDateStr(selectedDate), { emotion_log: nextLog });
+          }}
+          style={{
+            width: "100%", padding: "10px", fontSize: "0.78rem", fontWeight: 600,
+            color: "#fff", background: "#000", border: "none", borderRadius: "8px",
+            cursor: "pointer", marginBottom: "10px",
+          }}>
+          감정 기록
+        </button>
+
+        {/* 누적 기록 */}
+        {emotionLog.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {emotionLog.slice().sort((a, b) => a.hour - b.hour).map((entry, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 10px", background: "#fafafa", borderRadius: "8px", fontSize: "0.75rem" }}>
+                <span className="font-heading" style={{ fontSize: "0.68rem", color: "#6B7280", minWidth: "52px" }}>
+                  {formatHour(entry.hour)}
+                </span>
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 600, color: getEnergyColor(entry.energy),
+                  minWidth: "48px",
+                }}>
+                  {energyLabels[entry.energy]}
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", flex: 1 }}>
+                  {entry.emotions.map((em, j) => (
+                    <span key={j} style={{
+                      fontSize: "0.68rem", color: getEmotionColor(em),
+                      background: "#fff", border: `1px solid ${getEmotionColor(em)}`,
+                      borderRadius: "10px", padding: "1px 7px",
+                    }}>{em}</span>
+                  ))}
+                  {entry.custom && (
+                    <span style={{ fontSize: "0.68rem", color: "#6B7280", fontStyle: "italic" }}>
+                      {entry.custom}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={async () => {
+                    const nextLog = emotionLog.filter((_, idx) => idx !== emotionLog.indexOf(entry));
+                    setEmotionLog(nextLog);
+                    await upsertJournalEntry(toDateStr(selectedDate), { emotion_log: nextLog });
+                  }}
+                  style={{ fontSize: "0.7rem", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}>
+                  ×
+                </button>
+              </div>
             ))}
+          </div>
+        )}
+
+        {/* legacy: 기존 단일 emotion 표시 (있을 때만) */}
+        {emotionVal && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", padding: "6px 10px", background: "#fafafa", borderRadius: "8px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: getEmotionColor(emotionVal), flexShrink: 0 }} />
+            <span style={{ fontSize: "0.72rem", color: "#6B7280" }}>이전 기록: {emotionVal}</span>
+            <button onClick={async () => { setEmotionVal(null); await upsertJournalEntry(toDateStr(selectedDate), { emotion: "" }); }}
+              style={{ fontSize: "0.68rem", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>지우기</button>
           </div>
         )}
 

@@ -186,7 +186,7 @@ export async function getHealthLog(date: string) {
 
 export async function upsertHealthLog(
   date: string,
-  updates: { sleep_hours?: number; sleep_quality?: number; exercise?: string; meal?: string; condition?: number; memo?: string; coffee?: number }
+  updates: { sleep_hours?: number; sleep_quality?: number; exercise?: string; meal?: string; condition?: number; memo?: string; coffee?: number; coffee_log?: Array<{ hour: number }> }
 ) {
   const existing = await getHealthLog(date);
 
@@ -223,7 +223,7 @@ export async function getJournalEntry(date: string) {
 
 export async function upsertJournalEntry(
   date: string,
-  updates: { moment?: string; thought?: string; tomorrow?: string; emotion?: string; memo?: string; grateful?: string; done_today?: string; not_done_today?: string; want_tomorrow?: string; note_to_self?: string }
+  updates: { moment?: string; thought?: string; tomorrow?: string; emotion?: string; memo?: string; grateful?: string; done_today?: string; not_done_today?: string; want_tomorrow?: string; note_to_self?: string; emotion_log?: Array<{ hour: number; energy: number; emotions: string[]; custom?: string }> }
 ) {
   const existing = await getJournalEntry(date);
 
